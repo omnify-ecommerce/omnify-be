@@ -1,0 +1,38 @@
+package com.omnify.common.exception;
+
+import org.springframework.http.HttpStatus;
+
+public enum ErrorCode {
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dữ liệu đầu vào không hợp lệ"),
+    INVALID_CONTACT(HttpStatus.BAD_REQUEST, "Phải cung cấp email hoặc số điện thoại"),
+    TOKEN_INVALID(HttpStatus.BAD_REQUEST, "Token xác thực không hợp lệ"),
+    TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "Token xác thực đã hết hạn"),
+    TOKEN_ALREADY_USED( HttpStatus.BAD_REQUEST,"Token đã được sử dụng"),
+    EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được sử dụng"),
+    PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng"),
+    ACCOUNT_ALREADY_VERIFIED( HttpStatus.CONFLICT, "Tài khoản đã được xác thực"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"),
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy phiên đăng nhập hoặc đã đăng xuất"),
+    ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "Tài khoản đang bị tạm khóa"),
+    ACCOUNT_NOT_VERIFIED(HttpStatus.FORBIDDEN, "Tài khoản chưa được xác thực, vui lòng kiểm tra email/SMS"),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Thông tin đăng nhập không chính xác"),
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau"),
+    RESEND_COOLDOWN( HttpStatus.TOO_MANY_REQUESTS, "Vui lòng đợi trước khi gửi lại email xác thực");
+
+
+    private final HttpStatus httpStatus;
+    private final String defaultMessage;
+
+    ErrorCode(HttpStatus httpStatus, String defaultMessage) {
+        this.httpStatus = httpStatus;
+        this.defaultMessage = defaultMessage;
+    }
+
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
+
+    public String getDefaultMessage() {
+        return defaultMessage;
+    }
+}
