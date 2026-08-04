@@ -1,6 +1,6 @@
-package com.omnify.common.repository;
+package com.omnify.auth.domain.repository;
 
-import com.omnify.common.entity.Company;
+import com.omnify.auth.domain.entity.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

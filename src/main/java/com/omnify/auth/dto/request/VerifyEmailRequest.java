@@ -1,17 +1,21 @@
 package com.omnify.auth.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public class VerifyEmailRequest {
 
-    @NotBlank(message = "Token không được để trống")
-    private String token;
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không đúng định dạng")
+    private String email;
 
-    public String getToken() {
-        return token;
-    }
+    @NotBlank(message = "Mã xác thực không được để trống")
+    @Pattern(regexp = "\\d{6}", message = "Mã xác thực phải gồm 6 chữ số")
+    private String otpCode;
 
-    public void setToken(String token) {
-        this.token = token;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getOtpCode() { return otpCode; }
+    public void setOtpCode(String otpCode) { this.otpCode = otpCode; }
 }

@@ -1,8 +1,6 @@
-package com.omnify.auth.service;
+package com.omnify.auth.notification;
 
 import com.omnify.auth.domain.entity.VerificationToken;
-import com.omnify.auth.domain.event.UserRegisteredEvent;
-import com.omnify.auth.notification.VerificationEmailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;

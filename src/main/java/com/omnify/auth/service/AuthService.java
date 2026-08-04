@@ -9,6 +9,6 @@ public interface AuthService {
 
     RegisterResponse register(RegisterRequest request);
     LoginResponse login(LoginRequest request, String ipAddress, String userAgent);
-    void verifyEmail(String rawToken);
+    void verifyEmail(String email, String otpCode);
     void resendVerificationEmail(String email);
 }

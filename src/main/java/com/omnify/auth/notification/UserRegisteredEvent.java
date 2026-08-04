@@ -1,4 +1,4 @@
-package com.omnify.auth.domain.event;
+package com.omnify.auth.notification;
 
 import com.omnify.auth.domain.entity.VerificationToken;
 

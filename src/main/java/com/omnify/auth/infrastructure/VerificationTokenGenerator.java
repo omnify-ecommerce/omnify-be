@@ -4,7 +4,6 @@ import com.omnify.common.security.TokenHasher;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
-import java.util.Base64;
 
 @Component
 public class VerificationTokenGenerator {
@@ -16,10 +15,10 @@ public class VerificationTokenGenerator {
         this.tokenHasher = tokenHasher;
     }
 
+    /** Sinh mã OTP 6 số dùng cho email verify (đổi từ token 256-bit sang OTP, tránh Brevo link-tracking). */
     public String generateEmailToken() {
-        byte[] bytes = new byte[32];
-        secureRandom.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        int otp = 100000 + secureRandom.nextInt(900000);
+        return String.valueOf(otp);
     }
 
     public String generatePhoneOtp() {

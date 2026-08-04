@@ -37,6 +37,10 @@ public class VerificationToken {
     @Column(name = "used_at")
     private OffsetDateTime usedAt;
 
+    // ✅ MỚI — đếm số lần nhập sai để chống brute-force OTP 6 số
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount = 0;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
@@ -53,33 +57,14 @@ public class VerificationToken {
         return token;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getTokenHash() {
-        return tokenHash;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public OffsetDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public OffsetDateTime getUsedAt() {
-        return usedAt;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public String getTokenHash() { return tokenHash; }
+    public Type getType() { return type; }
+    public OffsetDateTime getExpiresAt() { return expiresAt; }
+    public OffsetDateTime getUsedAt() { return usedAt; }
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public int getAttemptCount() { return attemptCount; }
 
     public boolean isExpired() {
         return OffsetDateTime.now().isAfter(expiresAt);
@@ -91,5 +76,11 @@ public class VerificationToken {
 
     public void markUsed() {
         this.usedAt = OffsetDateTime.now();
+    }
+
+    /** Tăng số lần nhập sai. Trả về true nếu đã vượt ngưỡng cho phép. */
+    public boolean registerFailedAttempt(int maxAttempts) {
+        this.attemptCount++;
+        return this.attemptCount >= maxAttempts;
     }
 }

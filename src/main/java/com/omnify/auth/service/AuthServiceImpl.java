@@ -5,7 +5,7 @@ import com.omnify.auth.domain.entity.RefreshToken;
 import com.omnify.auth.domain.entity.User;
 import com.omnify.auth.domain.entity.UserStatus;
 import com.omnify.auth.domain.entity.VerificationToken;
-import com.omnify.auth.domain.event.UserRegisteredEvent;
+import com.omnify.auth.notification.UserRegisteredEvent;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
 import com.omnify.auth.domain.repository.UserRepository;
@@ -16,10 +16,10 @@ import com.omnify.auth.dto.response.LoginResponse;
 import com.omnify.auth.dto.response.RegisterResponse;
 import com.omnify.auth.infrastructure.RefreshTokenGenerator;
 import com.omnify.auth.infrastructure.VerificationTokenGenerator;
-import com.omnify.common.entity.Company;
+import com.omnify.auth.domain.entity.Company;
 import com.omnify.common.exception.BusinessException;
 import com.omnify.common.exception.ErrorCode;
-import com.omnify.common.repository.CompanyRepository;
+import com.omnify.auth.domain.repository.CompanyRepository;
 import com.omnify.common.security.JwtTokenProvider;
 import com.omnify.common.security.TokenHasher;
 import com.omnify.rbac.service.RoleAssignmentService;
@@ -29,16 +29,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private static final int EMAIL_TOKEN_TTL_MINUTES = 30;
-    private static final int PHONE_OTP_TTL_MINUTES = 5;
-    private static final String OWNER_ROLE = "owner";
 
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
@@ -59,8 +55,16 @@ public class AuthServiceImpl implements AuthService {
     private final int lockDurationMinutes;
     private final int refreshTokenTtlDays;
 
+    private static final String OWNER_ROLE = "owner";
+
+    @Value("${app.verification.phone-token-ttl-minutes}")
+    private int phoneOtpTtlMinutes;
     @Value("${app.verification.resend-cooldown-seconds}")
     private long resendCooldownSeconds;
+    @Value("${app.verification.max-otp-attempts}")
+    private int maxOtpAttempts;
+    @Value("${app.verification.email-token-ttl-minutes}")
+    private int emailTokenTtlMinutes;
 
     public AuthServiceImpl(UserRepository userRepository,
                            CompanyRepository companyRepository,
@@ -123,7 +127,7 @@ public class AuthServiceImpl implements AuthService {
                 ? verificationTokenGenerator.generateEmailToken()
                 : verificationTokenGenerator.generatePhoneOtp();
 
-        int ttlMinutes = useEmailChannel ? EMAIL_TOKEN_TTL_MINUTES : PHONE_OTP_TTL_MINUTES;
+        int ttlMinutes = useEmailChannel ? emailTokenTtlMinutes : phoneOtpTtlMinutes;
 
         VerificationToken verificationToken = VerificationToken.issue(
                 user.getId(),
@@ -198,11 +202,16 @@ public class AuthServiceImpl implements AuthService {
     }
     @Override
     @Transactional
-    public void verifyEmail(String rawToken) {
-        String tokenHash = tokenHasher.hash(rawToken);
+    public void verifyEmail(String email, String otpCode) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isEmailVerified()) {
+            throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
+        }
 
         VerificationToken token = verificationTokenRepository
-                .findByTokenHashAndType(tokenHash, VerificationToken.Type.EMAIL_VERIFY)
+                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFY)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_INVALID));
 
         if (token.isUsed()) {
@@ -211,12 +220,19 @@ public class AuthServiceImpl implements AuthService {
         if (token.isExpired()) {
             throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         }
+        if (token.getAttemptCount() >= maxOtpAttempts) {
+            throw new BusinessException(ErrorCode.OTP_LOCKED);
+        }
 
-        User user = userRepository.findById(token.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        String inputHash = tokenHasher.hash(otpCode);
 
-        if (user.isEmailVerified()) {
-            throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
+        if (!inputHash.equals(token.getTokenHash())) {
+            boolean lockedNow = token.registerFailedAttempt(maxOtpAttempts);
+            verificationTokenRepository.save(token);
+            if (lockedNow) {
+                throw new BusinessException(ErrorCode.OTP_LOCKED);
+            }
+            throw new BusinessException(ErrorCode.OTP_INVALID);
         }
 
         user.markEmailVerified();
@@ -232,7 +248,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getStatus() == UserStatus.ACTIVE) {
+        if (user.isEmailVerified()) {
             throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
         }
 
@@ -246,28 +262,23 @@ public class AuthServiceImpl implements AuthService {
                 throw new BusinessException(ErrorCode.RESEND_COOLDOWN);
             }
             if (!last.isUsed()) {
-                last.markUsed(); // invalidate token cũ, tránh nhiều token cùng sống
+                last.markUsed(); // invalidate mã cũ — tránh 2 mã cùng sống, giảm attack surface
                 verificationTokenRepository.save(last);
             }
         }
 
-        // ✅ FIX bug #5: phải sinh VÀ LƯU token mới, không chỉ sinh raw token để gửi mail
-        String rawToken = verificationTokenGenerator.generateEmailToken();
+        String rawOtp = verificationTokenGenerator.generateEmailToken();
         VerificationToken newToken = VerificationToken.issue(
                 user.getId(),
-                verificationTokenGenerator.hash(rawToken),
+                verificationTokenGenerator.hash(rawOtp),
                 VerificationToken.Type.EMAIL_VERIFY,
-                OffsetDateTime.now().plusMinutes(EMAIL_TOKEN_TTL_MINUTES)
+                OffsetDateTime.now().plusMinutes(emailTokenTtlMinutes)
         );
         verificationTokenRepository.save(newToken);
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
-                user.getId(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getPhone(),
-                rawToken,
-                VerificationToken.Type.EMAIL_VERIFY
+                user.getId(), user.getFullName(), user.getEmail(), user.getPhone(),
+                rawOtp, VerificationToken.Type.EMAIL_VERIFY
         ));
     }
 }

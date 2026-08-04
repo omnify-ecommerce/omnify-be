@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, UUID> {
-
-    Optional<VerificationToken> findByTokenHashAndType(String tokenHash, VerificationToken.Type type);
+    
     Optional<VerificationToken> findTopByUserIdAndTypeOrderByCreatedAtDesc(UUID userId, VerificationToken.Type type);
 }

@@ -1,4 +1,4 @@
-package com.omnify.common.entity;
+package com.omnify.auth.domain.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;

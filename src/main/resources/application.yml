@@ -77,7 +77,10 @@ app:
 
   verification:
     email-token-ttl-minutes: 30
+    phone-token-ttl-minutes: 5
     resend-cooldown-seconds: 60
+    max-otp-attempts: 5
+
 
   security:
     login:
