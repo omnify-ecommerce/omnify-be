@@ -1,7 +1,9 @@
 package com.omnify.auth.service;
 
 import com.omnify.auth.domain.entity.LoginAttempt;
+import com.omnify.auth.domain.entity.RefreshToken;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
+import com.omnify.auth.domain.repository.RefreshTokenRepository;
 import com.omnify.auth.domain.repository.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,11 +23,13 @@ public class LoginSecurityRecorder {
 
     private final UserRepository userRepository;
     private final LoginAttemptRepository loginAttemptRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public LoginSecurityRecorder(UserRepository userRepository,
-                                 LoginAttemptRepository loginAttemptRepository) {
+                                 LoginAttemptRepository loginAttemptRepository, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.loginAttemptRepository = loginAttemptRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -44,5 +48,10 @@ public class LoginSecurityRecorder {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordLockedAttempt(UUID userId, String identifier, String ipAddress, String userAgent) {
         loginAttemptRepository.save(LoginAttempt.record(userId, identifier, false, ipAddress, userAgent));
+    }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void revokeAllSessionsOnReuseDetected(java.util.UUID userId) {
+        refreshTokenRepository.revokeAllSessionsByUserId(
+                userId, RefreshToken.Status.VALID, RefreshToken.Status.REVOKED);
     }
 }

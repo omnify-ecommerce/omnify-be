@@ -17,9 +17,13 @@ public enum ErrorCode {
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "Tài khoản đang bị tạm khóa"),
     ACCOUNT_NOT_VERIFIED(HttpStatus.FORBIDDEN, "Tài khoản chưa được xác thực, vui lòng kiểm tra email/SMS"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Thông tin đăng nhập không chính xác"),
+    REFRESH_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ"),
+    REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Refresh token đã hết hạn hoặc đã bị thu hồi, vui lòng đăng nhập lại"),
+    REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "Phát hiện dấu hiệu bất thường, tất cả thiết bị đã được đăng xuất vì lý do bảo mật"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau"),
     RESEND_COOLDOWN( HttpStatus.TOO_MANY_REQUESTS, "Vui lòng đợi trước khi gửi lại email xác thực"),
     OTP_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Đã nhập sai quá số lần cho phép, vui lòng gửi lại mã mới");
+
 
 
 

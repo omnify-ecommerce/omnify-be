@@ -96,6 +96,8 @@ public class RefreshToken {
         return ipAddress;
     }
 
+    public String getTokenHash() {return tokenHash;}
+
     public OffsetDateTime getLastUsedAt() {
         return lastUsedAt;
     }
@@ -108,7 +110,18 @@ public class RefreshToken {
         return expiresAt;
     }
 
+    public OffsetDateTime getRevokedAt() {return revokedAt;}
+
     public boolean isActive() {
         return status == Status.VALID && expiresAt.isAfter(OffsetDateTime.now());
+    }
+
+    public void revoke() {
+        this.status = Status.REVOKED;
+        this.revokedAt = OffsetDateTime.now();
+    }
+
+    public void touchLastUsed() {
+        this.lastUsedAt = OffsetDateTime.now();
     }
 }

@@ -75,4 +75,19 @@ public class AuthController {
         authService.resendVerificationEmail(request.getEmail());
         return ResponseEntity.ok(ApiResponse.success(null, "Email xác thực đã được gửi lại"));
     }
+
+    
+    @Operation(summary = "Làm mới access token",
+            description = "Dùng refresh token để lấy access token mới mà không cần đăng nhập lại. "
+                    + "Refresh token cũ sẽ bị thu hồi ngay (rotation), trả về cặp token mới.")
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
+            @Valid @RequestBody RefreshTokenRequest request,
+            HttpServletRequest httpRequest) {
+        String ipAddress = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        LoginResponse response = authService.refreshToken(request.getRefreshToken(), ipAddress, userAgent);
+        return ResponseEntity.ok(ApiResponse.success(response, "Làm mới token thành công"));
+    }
 }

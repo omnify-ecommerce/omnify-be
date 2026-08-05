@@ -11,4 +11,5 @@ public interface AuthService {
     LoginResponse login(LoginRequest request, String ipAddress, String userAgent);
     void verifyEmail(String email, String otpCode);
     void resendVerificationEmail(String email);
+    LoginResponse refreshToken(String rawRefreshToken, String ipAddress, String userAgent);
 }

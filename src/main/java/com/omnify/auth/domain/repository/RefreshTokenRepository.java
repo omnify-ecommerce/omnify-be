@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
@@ -41,4 +42,18 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
                                @Param("revokedStatus") RefreshToken.Status revokedStatus);
 
     boolean existsByIdAndUserId(UUID id, UUID userId);
+
+    Optional<RefreshToken> findByTokenHash(String tokenHash);
+
+    /**
+     * Dùng khi phát hiện reuse attack (token đã REVOKED nhưng bị dùng lại)
+     * -> thu hồi TOÀN BỘ session của user, không loại trừ session nào,
+     * vì không biết chính xác thiết bị nào đang bị chiếm.
+     */
+    @Modifying
+    @Query("UPDATE RefreshToken rt SET rt.status = :revokedStatus, rt.revokedAt = CURRENT_TIMESTAMP " +
+            "WHERE rt.userId = :userId AND rt.status = :validStatus")
+    int revokeAllSessionsByUserId(@Param("userId") UUID userId,
+                                  @Param("validStatus") RefreshToken.Status validStatus,
+                                  @Param("revokedStatus") RefreshToken.Status revokedStatus);
 }

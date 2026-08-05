@@ -281,4 +281,52 @@ public class AuthServiceImpl implements AuthService {
                 rawOtp, VerificationToken.Type.EMAIL_VERIFY
         ));
     }
+    @Override
+    @Transactional
+    public LoginResponse refreshToken(String rawRefreshToken, String ipAddress, String userAgent) {
+        String tokenHash = refreshTokenGenerator.hash(rawRefreshToken);
+
+        RefreshToken token = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID));
+
+        if (token.getStatus() == RefreshToken.Status.REVOKED) {
+            loginSecurityRecorder.revokeAllSessionsOnReuseDetected(token.getUserId());
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED);
+        }
+
+        if (token.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+        }
+
+        User user = userRepository.findById(token.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED);
+        }
+
+        // Rotation: revoke token cũ NGAY trong transaction này trước khi issue token mới,
+        // đảm bảo tại một thời điểm chỉ có đúng 1 refresh token VALID cho phiên này.
+        token.touchLastUsed();
+        token.revoke();
+        refreshTokenRepository.save(token);
+
+        String role = roleAssignmentService.getPrimaryRoleName(user.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getCompanyId(), role);
+
+        String newRawRefreshToken = refreshTokenGenerator.generate();
+        RefreshToken newToken = RefreshToken.issue(
+                user.getId(),
+                refreshTokenGenerator.hash(newRawRefreshToken),
+                token.getDeviceName(),
+                token.getDeviceType(),
+                userAgent,
+                ipAddress,
+                OffsetDateTime.now().plusDays(refreshTokenTtlDays)
+        );
+        refreshTokenRepository.save(newToken);
+
+        return new LoginResponse(accessToken, newRawRefreshToken, newToken.getId(),
+                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), user.getCompanyId(), role);
+    }
 }
