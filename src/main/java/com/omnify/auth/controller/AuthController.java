@@ -64,12 +64,15 @@ public class AuthController {
         sessionService.revokeSession(request.getSessionId(), principal.userId());
         return ResponseEntity.ok(ApiResponse.success(null, "Đăng xuất thành công"));
     }
+    @Operation(summary = "Xác thực email",
+            description = "Nhận mã otp và thực hiện xác thực tài khoản từ PENDING thành ACTIVE.")
     @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
         authService.verifyEmail(request.getEmail(), request.getOtpCode());
         return ResponseEntity.ok(ApiResponse.success(null, "Xác thực tài khoản thành công"));
     }
-
+    @Operation(summary = "Gửi lại mã xác thực tài khoản",
+            description = "Gửi lại mã otp qua email của người dùng để xác thực lại")
     @PostMapping("/resend-verification")
     public ResponseEntity<ApiResponse<Void>> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
         authService.resendVerificationEmail(request.getEmail());

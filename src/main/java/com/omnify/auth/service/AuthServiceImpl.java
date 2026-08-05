@@ -48,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleAssignmentService roleAssignmentService;
     private final ApplicationEventPublisher eventPublisher;
     private final LoginSecurityRecorder loginSecurityRecorder;
+    private final VerificationAttemptRecorder verificationAttemptRecorder;
     private final TokenHasher tokenHasher;
 
 
@@ -76,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
                            RefreshTokenGenerator refreshTokenGenerator,
                            JwtTokenProvider jwtTokenProvider,
                            RoleAssignmentService roleAssignmentService,
-                           ApplicationEventPublisher eventPublisher, LoginSecurityRecorder loginSecurityRecorder, TokenHasher tokenHasher,
+                           ApplicationEventPublisher eventPublisher, LoginSecurityRecorder loginSecurityRecorder, VerificationAttemptRecorder verificationAttemptRecorder, TokenHasher tokenHasher,
                            @Value("${omnify.security.auth.max-failed-login-attempts}") int maxFailedLoginAttempts,
                            @Value("${omnify.security.auth.lock-duration-minutes}") int lockDurationMinutes,
                            @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays) {
@@ -92,6 +93,7 @@ public class AuthServiceImpl implements AuthService {
         this.roleAssignmentService = roleAssignmentService;
         this.eventPublisher = eventPublisher;
         this.loginSecurityRecorder = loginSecurityRecorder;
+        this.verificationAttemptRecorder = verificationAttemptRecorder;
         this.tokenHasher = tokenHasher;
         this.maxFailedLoginAttempts = maxFailedLoginAttempts;
         this.lockDurationMinutes = lockDurationMinutes;
@@ -227,9 +229,10 @@ public class AuthServiceImpl implements AuthService {
         String inputHash = tokenHasher.hash(otpCode);
 
         if (!inputHash.equals(token.getTokenHash())) {
-            boolean lockedNow = token.registerFailedAttempt(maxOtpAttempts);
-            verificationTokenRepository.save(token);
-            if (lockedNow) {
+            // ✅ Ghi nhận sai OTP qua transaction ĐỘC LẬP — luôn commit thật xuống DB
+            // dù method này sắp throw exception ngay sau đó
+            int attemptsSoFar = verificationAttemptRecorder.recordFailedAttempt(token.getId());
+            if (attemptsSoFar >= maxOtpAttempts) {
                 throw new BusinessException(ErrorCode.OTP_LOCKED);
             }
             throw new BusinessException(ErrorCode.OTP_INVALID);
