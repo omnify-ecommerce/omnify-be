@@ -34,24 +34,6 @@ public class LoginRequest implements EmailOrPhoneCarrier {
     )
     private String password;
 
-    @Schema(
-            description = "Tên thiết bị dùng để đăng nhập",
-            example = "Chrome on Windows 11"
-    )
-    private String deviceName;
-
-    @Schema(
-            description = "Loại thiết bị",
-            allowableValues = {
-                    "web",
-                    "mobile",
-                    "tablet",
-                    "desktop_app"
-            },
-            defaultValue = "web",
-            example = "web"
-    )
-    private String deviceType = "web";
 
     @Override
     public String getEmail() {
@@ -79,19 +61,4 @@ public class LoginRequest implements EmailOrPhoneCarrier {
         this.password = password;
     }
 
-    public String getDeviceName() {
-        return deviceName;
-    }
-
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
-    }
-
-    public String getDeviceType() {
-        return deviceType;
-    }
-
-    public void setDeviceType(String deviceType) {
-        this.deviceType = deviceType;
-    }
 }

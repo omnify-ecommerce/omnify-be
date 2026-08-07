@@ -28,7 +28,7 @@ public class SessionServiceImpl implements SessionService {
                 refreshTokenRepository.findActiveSessionsByUserId(userId, RefreshToken.Status.VALID);
         return sessions.stream()
                 .map(rt -> new SessionResponse(
-                        rt.getId(), rt.getDeviceName(), rt.getDeviceType(), rt.getIpAddress(),
+                        rt.getId(), rt.getDeviceName(), rt.getIpAddress(),
                         rt.getLastUsedAt(), rt.getCreatedAt(), rt.getId().equals(currentSessionId)))
                 .collect(Collectors.toList());
     }

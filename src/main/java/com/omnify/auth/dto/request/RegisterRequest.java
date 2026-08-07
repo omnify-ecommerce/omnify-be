@@ -1,21 +1,19 @@
 package com.omnify.auth.dto.request;
 
 import com.omnify.common.constant.RegexPattern;
-import com.omnify.common.validation.AtLeastOneContact;
-import com.omnify.common.validation.EmailOrPhoneCarrier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-@AtLeastOneContact
-public class RegisterRequest  implements EmailOrPhoneCarrier {
+public class RegisterRequest {
 
-    @Schema(description = "Email đăng ký (bắt buộc nếu không có phone)", example = "owner@omnify.vn")
+    @Schema(description = "Email đăng ký", example = "owner@omnify.vn", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "Email không được để trống")
     @Pattern(regexp = RegexPattern.EMAIL, message = "Email không đúng định dạng")
     private String email;
 
-    @Schema(description = "SĐT đăng ký định dạng VN (bắt buộc nếu không có email)", example = "0987654321")
+    @Schema(description = "SĐT đăng ký định dạng VN (không bắt buộc)", example = "0987654321", nullable = true)
     @Pattern(regexp = RegexPattern.PHONE_VN, message = "Số điện thoại không đúng định dạng")
     private String phone;
 
@@ -30,17 +28,12 @@ public class RegisterRequest  implements EmailOrPhoneCarrier {
     @Size(max = 255, message = "Họ tên tối đa 255 ký tự")
     private String fullName;
 
-    @Schema(description = "Tên công ty/shop — sẽ tạo tenant mới", example = "Omnify Demo Shop")
-    @NotBlank(message = "Tên công ty/shop không được để trống")
-    @Size(max = 255, message = "Tên công ty tối đa 255 ký tự")
-    private String companyName;
-
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
-        this.email = (email == null || email.isBlank()) ? null : email.trim();
+        this.email = (email == null) ? null : email.trim();
     }
 
     public String getPhone() {
@@ -65,13 +58,5 @@ public class RegisterRequest  implements EmailOrPhoneCarrier {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
     }
 }

@@ -5,6 +5,7 @@ import com.omnify.auth.domain.entity.RefreshToken;
 import com.omnify.auth.domain.entity.User;
 import com.omnify.auth.domain.entity.UserStatus;
 import com.omnify.auth.domain.entity.VerificationToken;
+import com.omnify.auth.infrastructure.DeviceInfoParser;
 import com.omnify.auth.notification.UserRegisteredEvent;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
@@ -16,10 +17,8 @@ import com.omnify.auth.dto.response.LoginResponse;
 import com.omnify.auth.dto.response.RegisterResponse;
 import com.omnify.auth.infrastructure.RefreshTokenGenerator;
 import com.omnify.auth.infrastructure.VerificationTokenGenerator;
-import com.omnify.auth.domain.entity.Company;
 import com.omnify.common.exception.BusinessException;
 import com.omnify.common.exception.ErrorCode;
-import com.omnify.auth.domain.repository.CompanyRepository;
 import com.omnify.common.security.JwtTokenProvider;
 import com.omnify.common.security.TokenHasher;
 import com.omnify.rbac.service.RoleAssignmentService;
@@ -35,9 +34,7 @@ import java.util.Optional;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-
     private final UserRepository userRepository;
-    private final CompanyRepository companyRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptRepository loginAttemptRepository;
@@ -50,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoginSecurityRecorder loginSecurityRecorder;
     private final VerificationAttemptRecorder verificationAttemptRecorder;
     private final TokenHasher tokenHasher;
-
+    private final DeviceInfoParser deviceInfoParser;
 
     private final int maxFailedLoginAttempts;
     private final int lockDurationMinutes;
@@ -68,7 +65,6 @@ public class AuthServiceImpl implements AuthService {
     private int emailTokenTtlMinutes;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           CompanyRepository companyRepository,
                            VerificationTokenRepository verificationTokenRepository,
                            RefreshTokenRepository refreshTokenRepository,
                            LoginAttemptRepository loginAttemptRepository,
@@ -77,12 +73,14 @@ public class AuthServiceImpl implements AuthService {
                            RefreshTokenGenerator refreshTokenGenerator,
                            JwtTokenProvider jwtTokenProvider,
                            RoleAssignmentService roleAssignmentService,
-                           ApplicationEventPublisher eventPublisher, LoginSecurityRecorder loginSecurityRecorder, VerificationAttemptRecorder verificationAttemptRecorder, TokenHasher tokenHasher,
+                           ApplicationEventPublisher eventPublisher,
+                           LoginSecurityRecorder loginSecurityRecorder,
+                           VerificationAttemptRecorder verificationAttemptRecorder,
+                           TokenHasher tokenHasher, DeviceInfoParser deviceInfoParser,
                            @Value("${omnify.security.auth.max-failed-login-attempts}") int maxFailedLoginAttempts,
                            @Value("${omnify.security.auth.lock-duration-minutes}") int lockDurationMinutes,
                            @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays) {
         this.userRepository = userRepository;
-        this.companyRepository = companyRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.loginAttemptRepository = loginAttemptRepository;
@@ -95,6 +93,7 @@ public class AuthServiceImpl implements AuthService {
         this.loginSecurityRecorder = loginSecurityRecorder;
         this.verificationAttemptRecorder = verificationAttemptRecorder;
         this.tokenHasher = tokenHasher;
+        this.deviceInfoParser = deviceInfoParser;
         this.maxFailedLoginAttempts = maxFailedLoginAttempts;
         this.lockDurationMinutes = lockDurationMinutes;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
@@ -110,20 +109,21 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.PHONE_ALREADY_EXISTS);
         }
 
-        Company company = Company.createActive(request.getCompanyName());
-        company = companyRepository.save(company);
-
         String passwordHash = passwordEncoder.encode(request.getPassword());
-        User user = User.createPending(
-                company.getId(), request.getEmail(), request.getPhone(), passwordHash, request.getFullName());
+        User user = User.builder()
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .passwordHash(passwordHash)
+                .fullName(request.getFullName())
+                .build();
         user = userRepository.save(user);
 
         roleAssignmentService.assignRole(user.getId(), OWNER_ROLE, null);
 
         boolean useEmailChannel = request.getEmail() != null;
         VerificationToken.Type tokenType = useEmailChannel
-                ? VerificationToken.Type.EMAIL_VERIFY
-                : VerificationToken.Type.PHONE_VERIFY;
+                ? VerificationToken.Type.EMAIL_VERIFICATION
+                : VerificationToken.Type.PHONE_VERIFICATION;
 
         String rawToken = useEmailChannel
                 ? verificationTokenGenerator.generateEmailToken()
@@ -148,15 +148,13 @@ public class AuthServiceImpl implements AuthService {
                 tokenType
         ));
 
-        return new RegisterResponse(user.getId(), company.getId(), user.getStatus().name(),
-                tokenType.name(), OWNER_ROLE);
+        return new RegisterResponse(user.getId(), user.getStatus().name(), tokenType.name(), OWNER_ROLE);
     }
 
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request, String ipAddress, String userAgent) {
         String identifier = request.getEmail() != null ? request.getEmail() : request.getPhone();
-
 
         User user = userRepository.findByEmailOrPhone(identifier).orElse(null);
 
@@ -177,31 +175,34 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            loginSecurityRecorder.recordLockedAttempt(user.getId(), identifier, ipAddress, userAgent);
+            LoginAttempt.FailureReason reason = user.isEmailVerified()
+                    ? LoginAttempt.FailureReason.PHONE_NOT_VERIFIED
+                    : LoginAttempt.FailureReason.EMAIL_NOT_VERIFIED;
+            loginSecurityRecorder.recordUnverifiedAttempt(user.getId(), identifier, ipAddress, userAgent, reason);
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED);
         }
 
         user.registerSuccessfulLogin();
-        loginAttemptRepository.save(LoginAttempt.record(user.getId(), identifier, true, ipAddress, userAgent));
+        loginAttemptRepository.save(LoginAttempt.success(user.getId(), identifier, ipAddress, userAgent));
 
         String role = roleAssignmentService.getPrimaryRoleName(user.getId());
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getCompanyId(), role);
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), role);
 
         String rawRefreshToken = refreshTokenGenerator.generate();
         RefreshToken refreshToken = RefreshToken.issue(
                 user.getId(),
                 refreshTokenGenerator.hash(rawRefreshToken),
-                request.getDeviceName(),
-                request.getDeviceType(),
+                deviceInfoParser.parseDeviceName(userAgent),
                 userAgent,
                 ipAddress,
                 OffsetDateTime.now().plusDays(refreshTokenTtlDays)
         );
         refreshTokenRepository.save(refreshToken);
-
+        
         return new LoginResponse(accessToken, rawRefreshToken, refreshToken.getId(),
-                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), user.getCompanyId(), role);
+                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), role);
     }
+
     @Override
     @Transactional
     public void verifyEmail(String email, String otpCode) {
@@ -213,7 +214,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         VerificationToken token = verificationTokenRepository
-                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFY)
+                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_INVALID));
 
         if (token.isUsed()) {
@@ -229,8 +230,6 @@ public class AuthServiceImpl implements AuthService {
         String inputHash = tokenHasher.hash(otpCode);
 
         if (!inputHash.equals(token.getTokenHash())) {
-            // ✅ Ghi nhận sai OTP qua transaction ĐỘC LẬP — luôn commit thật xuống DB
-            // dù method này sắp throw exception ngay sau đó
             int attemptsSoFar = verificationAttemptRecorder.recordFailedAttempt(token.getId());
             if (attemptsSoFar >= maxOtpAttempts) {
                 throw new BusinessException(ErrorCode.OTP_LOCKED);
@@ -256,7 +255,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Optional<VerificationToken> lastToken = verificationTokenRepository
-                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFY);
+                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION);
 
         if (lastToken.isPresent()) {
             VerificationToken last = lastToken.get();
@@ -265,7 +264,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new BusinessException(ErrorCode.RESEND_COOLDOWN);
             }
             if (!last.isUsed()) {
-                last.markUsed(); // invalidate mã cũ — tránh 2 mã cùng sống, giảm attack surface
+                last.markUsed();
                 verificationTokenRepository.save(last);
             }
         }
@@ -274,16 +273,17 @@ public class AuthServiceImpl implements AuthService {
         VerificationToken newToken = VerificationToken.issue(
                 user.getId(),
                 verificationTokenGenerator.hash(rawOtp),
-                VerificationToken.Type.EMAIL_VERIFY,
+                VerificationToken.Type.EMAIL_VERIFICATION,
                 OffsetDateTime.now().plusMinutes(emailTokenTtlMinutes)
         );
         verificationTokenRepository.save(newToken);
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
                 user.getId(), user.getFullName(), user.getEmail(), user.getPhone(),
-                rawOtp, VerificationToken.Type.EMAIL_VERIFY
+                rawOtp, VerificationToken.Type.EMAIL_VERIFICATION
         ));
     }
+
     @Override
     @Transactional
     public LoginResponse refreshToken(String rawRefreshToken, String ipAddress, String userAgent) {
@@ -308,21 +308,18 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED);
         }
 
-        // Rotation: revoke token cũ NGAY trong transaction này trước khi issue token mới,
-        // đảm bảo tại một thời điểm chỉ có đúng 1 refresh token VALID cho phiên này.
         token.touchLastUsed();
         token.revoke();
         refreshTokenRepository.save(token);
 
         String role = roleAssignmentService.getPrimaryRoleName(user.getId());
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getCompanyId(), role);
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), role);
 
         String newRawRefreshToken = refreshTokenGenerator.generate();
         RefreshToken newToken = RefreshToken.issue(
                 user.getId(),
                 refreshTokenGenerator.hash(newRawRefreshToken),
                 token.getDeviceName(),
-                token.getDeviceType(),
                 userAgent,
                 ipAddress,
                 OffsetDateTime.now().plusDays(refreshTokenTtlDays)
@@ -330,6 +327,6 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(newToken);
 
         return new LoginResponse(accessToken, newRawRefreshToken, newToken.getId(),
-                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), user.getCompanyId(), role);
+                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), role);
     }
 }

@@ -25,11 +25,10 @@ public class JwtTokenProvider {
         this.accessTokenTtlSeconds = accessTokenTtlSeconds;
     }
 
-    public String generateAccessToken(UUID userId, UUID companyId, String role) {
+    public String generateAccessToken(UUID userId, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(userId.toString())
-                .claim("companyId", companyId != null ? companyId.toString() : null)
                 .claim("role", role)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(accessTokenTtlSeconds)))

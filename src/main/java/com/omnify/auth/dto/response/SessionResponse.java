@@ -23,17 +23,6 @@ public class SessionResponse {
     )
     private final String deviceName;
 
-    @Schema(
-            description = "Loại thiết bị",
-            example = "web",
-            allowableValues = {
-                    "web",
-                    "mobile",
-                    "tablet",
-                    "desktop_app"
-            }
-    )
-    private final String deviceType;
 
     @Schema(
             description = "Địa chỉ IP của phiên đăng nhập",
@@ -62,7 +51,6 @@ public class SessionResponse {
     public SessionResponse(
             UUID sessionId,
             String deviceName,
-            String deviceType,
             String ipAddress,
             OffsetDateTime lastUsedAt,
             OffsetDateTime createdAt,
@@ -70,7 +58,6 @@ public class SessionResponse {
 
         this.sessionId = sessionId;
         this.deviceName = deviceName;
-        this.deviceType = deviceType;
         this.ipAddress = ipAddress;
         this.lastUsedAt = lastUsedAt;
         this.createdAt = createdAt;
@@ -85,9 +72,6 @@ public class SessionResponse {
         return deviceName;
     }
 
-    public String getDeviceType() {
-        return deviceType;
-    }
 
     public String getIpAddress() {
         return ipAddress;

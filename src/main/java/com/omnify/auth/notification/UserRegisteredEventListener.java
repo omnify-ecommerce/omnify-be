@@ -22,7 +22,7 @@ public class UserRegisteredEventListener {
     @Async("mailTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onUserRegistered(UserRegisteredEvent event) {
-        if (event.getVerificationChannel() != VerificationToken.Type.EMAIL_VERIFY) {
+        if (event.getVerificationChannel() != VerificationToken.Type.EMAIL_VERIFICATION) {
             log.info("Verification channel is not email, skip sending mail. userId={}", event.getUserId());
             return;
         }
