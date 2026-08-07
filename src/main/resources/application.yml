@@ -60,11 +60,33 @@ omnify:
     jwt:
       secret: ${JWT_SECRET}
       access-token-ttl-seconds: 900
-
     auth:
-      max-failed-login-attempts: 5
-      lock-duration-minutes: 15
       refresh-token-ttl-days: 30
+      lockout:
+        schedule-seconds: [0,0,0,30,60,120,300,600]
+
+    rate-limit:
+      rules:
+        login:
+          path: /api/v1/auth/login
+          capacity: 5
+          refresh-period-seconds: 60
+        register:
+          path: /api/v1/auth/register
+          capacity: 3
+          refresh-period-seconds: 60
+        resend-verification:
+          path: /api/v1/auth/resend-verification
+          capacity: 3
+          refresh-period-seconds: 60
+        refresh:
+          path: /api/v1/auth/refresh
+          capacity: 10
+          refresh-period-seconds: 60
+        verify-email:
+          path: /api/v1/auth/verify-email
+          capacity: 5
+          refresh-period-seconds: 60
 
 app:
   mail:
@@ -80,12 +102,6 @@ app:
     phone-token-ttl-minutes: 5
     resend-cooldown-seconds: 60
     max-otp-attempts: 5
-
-
-  security:
-    login:
-      max-failed-attempts: 5
-      lockout-minutes: 15
 
 springdoc:
   api-docs:

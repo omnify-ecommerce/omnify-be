@@ -1,7 +1,10 @@
 package com.omnify;
 
+import com.omnify.auth.infrastructure.LockoutProperties;
+import com.omnify.common.security.RateLimitProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -12,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableAsync
 @EnableScheduling
+@EnableConfigurationProperties({RateLimitProperties.class, LockoutProperties.class})
 public class OmnifyApplication {
 
     public static void main(String[] args) {

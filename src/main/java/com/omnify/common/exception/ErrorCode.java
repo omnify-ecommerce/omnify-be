@@ -22,7 +22,8 @@ public enum ErrorCode {
     REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "Phát hiện dấu hiệu bất thường, tất cả thiết bị đã được đăng xuất vì lý do bảo mật"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau"),
     RESEND_COOLDOWN( HttpStatus.TOO_MANY_REQUESTS, "Vui lòng đợi trước khi gửi lại email xác thực"),
-    OTP_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Đã nhập sai quá số lần cho phép, vui lòng gửi lại mã mới");
+    OTP_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Đã nhập sai quá số lần cho phép, vui lòng gửi lại mã mới"),
+    RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau");
 
 
 

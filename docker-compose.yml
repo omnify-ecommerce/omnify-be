@@ -44,5 +44,13 @@ services:
     ports:
       - "9200:9200"
 
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: omnify-redisinsight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+
 volumes:
   omnify_pg_data:

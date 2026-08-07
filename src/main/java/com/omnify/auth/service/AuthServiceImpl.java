@@ -49,8 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenHasher tokenHasher;
     private final DeviceInfoParser deviceInfoParser;
 
-    private final int maxFailedLoginAttempts;
-    private final int lockDurationMinutes;
+
     private final int refreshTokenTtlDays;
 
     private static final String OWNER_ROLE = "owner";
@@ -77,8 +76,6 @@ public class AuthServiceImpl implements AuthService {
                            LoginSecurityRecorder loginSecurityRecorder,
                            VerificationAttemptRecorder verificationAttemptRecorder,
                            TokenHasher tokenHasher, DeviceInfoParser deviceInfoParser,
-                           @Value("${omnify.security.auth.max-failed-login-attempts}") int maxFailedLoginAttempts,
-                           @Value("${omnify.security.auth.lock-duration-minutes}") int lockDurationMinutes,
                            @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
@@ -94,8 +91,6 @@ public class AuthServiceImpl implements AuthService {
         this.verificationAttemptRecorder = verificationAttemptRecorder;
         this.tokenHasher = tokenHasher;
         this.deviceInfoParser = deviceInfoParser;
-        this.maxFailedLoginAttempts = maxFailedLoginAttempts;
-        this.lockDurationMinutes = lockDurationMinutes;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
@@ -169,8 +164,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            loginSecurityRecorder.recordFailedAttempt(
-                    user.getId(), identifier, ipAddress, userAgent, maxFailedLoginAttempts, lockDurationMinutes);
+            loginSecurityRecorder.recordFailedAttempt(user.getId(), identifier, ipAddress, userAgent);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -198,7 +192,7 @@ public class AuthServiceImpl implements AuthService {
                 OffsetDateTime.now().plusDays(refreshTokenTtlDays)
         );
         refreshTokenRepository.save(refreshToken);
-        
+
         return new LoginResponse(accessToken, rawRefreshToken, refreshToken.getId(),
                 jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), role);
     }
