@@ -16,7 +16,7 @@ public class RefreshTokenGenerator {
         this.tokenHasher = tokenHasher;
     }
 
-    /** Refresh token dài 256-bit, random, không đoán được. */
+    // Refresh token 256-bit, random
     public String generate() {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);

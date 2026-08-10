@@ -19,12 +19,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     List<RefreshToken> findActiveSessionsByUserId(@Param("userId") UUID userId,
                                                   @Param("status") RefreshToken.Status status);
 
-    /**
-     * Revoke atomic 1 session cụ thể, LUÔN kèm điều kiện user_id để chặn IDOR
-     * (user A không thể đoán UUID rồi đăng xuất phiên của user B).
-     * Trả về số dòng bị ảnh hưởng -> 0 nghĩa là session không tồn tại hoặc
-     * không thuộc về user đang gọi -> controller trả 404.
-     */
+
     @Modifying
     @Query("UPDATE RefreshToken rt SET rt.status = :revokedStatus, rt.revokedAt = CURRENT_TIMESTAMP " +
             "WHERE rt.id = :sessionId AND rt.userId = :userId AND rt.status = :validStatus")
@@ -45,11 +40,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-    /**
-     * Dùng khi phát hiện reuse attack (token đã REVOKED nhưng bị dùng lại)
-     * -> thu hồi TOÀN BỘ session của user, không loại trừ session nào,
-     * vì không biết chính xác thiết bị nào đang bị chiếm.
-     */
+
     @Modifying
     @Query("UPDATE RefreshToken rt SET rt.status = :revokedStatus, rt.revokedAt = CURRENT_TIMESTAMP " +
             "WHERE rt.userId = :userId AND rt.status = :validStatus")

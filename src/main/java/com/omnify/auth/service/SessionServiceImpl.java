@@ -27,10 +27,15 @@ public class SessionServiceImpl implements SessionService {
         List<RefreshToken> sessions =
                 refreshTokenRepository.findActiveSessionsByUserId(userId, RefreshToken.Status.VALID);
         return sessions.stream()
-                .map(rt -> new SessionResponse(
-                        rt.getId(), rt.getDeviceName(), rt.getIpAddress(),
-                        rt.getLastUsedAt(), rt.getCreatedAt(), rt.getId().equals(currentSessionId)))
-                .collect(Collectors.toList());
+                .map(rt -> SessionResponse.builder()
+                        .sessionId(rt.getId())
+                        .deviceName(rt.getDeviceName())
+                        .ipAddress(rt.getIpAddress())
+                        .lastUsedAt(rt.getLastUsedAt())
+                        .createdAt(rt.getCreatedAt())
+                        .current(rt.getId().equals(currentSessionId))
+                        .build())
+                .toList();
     }
 
     @Override
@@ -46,10 +51,6 @@ public class SessionServiceImpl implements SessionService {
     @Override
     @Transactional
     public void revokeAllOtherSessions(UUID userId, UUID currentSessionId) {
-        // Bắt buộc xác thực currentSessionId thực sự thuộc về user đang gọi TRƯỚC khi
-        // dùng nó làm điều kiện loại trừ trong UPDATE. Nếu không validate, 1 UUID sai/rác
-        // sẽ khiến điều kiện "id <> currentSessionId" đúng với MỌI session của user,
-        // dẫn tới tự đăng xuất luôn cả phiên hiện tại của chính mình.
         boolean belongsToUser = refreshTokenRepository.existsByIdAndUserId(currentSessionId, userId);
         if (!belongsToUser) {
             throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);

@@ -4,12 +4,16 @@ import com.omnify.common.validation.AtLeastOneContact;
 import com.omnify.common.validation.EmailOrPhoneCarrier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
 @AtLeastOneContact
 @Schema(
         name = "LoginRequest",
         description = "Thông tin đăng nhập bằng email hoặc số điện thoại"
 )
+@Getter
+@Setter
 public class LoginRequest implements EmailOrPhoneCarrier {
 
     @Schema(
@@ -35,30 +39,12 @@ public class LoginRequest implements EmailOrPhoneCarrier {
     private String password;
 
 
-    @Override
-    public String getEmail() {
-        return email;
-    }
-
     public void setEmail(String email) {
         this.email = (email == null || email.isBlank()) ? null : email.trim();
     }
 
-    @Override
-    public String getPhone() {
-        return phone;
-    }
-
     public void setPhone(String phone) {
         this.phone = (phone == null || phone.isBlank()) ? null : phone.trim();
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
 }

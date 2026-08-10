@@ -4,12 +4,7 @@ import org.springframework.stereotype.Component;
 import ua_parser.Client;
 import ua_parser.Parser;
 
-/**
- * Parse User-Agent string thành tên thiết bị thân thiện để hiển thị UI
- * (vd "Chrome on Windows 11", "Safari on iPhone").
- * CHỈ dùng cho mục đích hiển thị, KHÔNG dùng cho quyết định bảo mật —
- * User-Agent có thể bị client giả mạo tuỳ ý.
- */
+
 @Component
 public class DeviceInfoParser {
 
@@ -35,7 +30,6 @@ public class DeviceInfoParser {
             }
             return browser + " on " + os;
         } catch (Exception e) {
-            // Không để lỗi parse UA làm fail cả luồng login/refresh
             return "Unknown device";
         }
     }

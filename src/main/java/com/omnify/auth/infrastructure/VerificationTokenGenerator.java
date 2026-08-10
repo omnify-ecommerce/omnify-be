@@ -15,7 +15,7 @@ public class VerificationTokenGenerator {
         this.tokenHasher = tokenHasher;
     }
 
-    /** Sinh mã OTP 6 số dùng cho email verify (đổi từ token 256-bit sang OTP, tránh Brevo link-tracking). */
+
     public String generateEmailToken() {
         int otp = 100000 + secureRandom.nextInt(900000);
         return String.valueOf(otp);

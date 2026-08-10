@@ -1,9 +1,13 @@
 package com.omnify.auth.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.util.UUID;
 
+@Getter
+@Builder
 @Schema(
         name = "LoginResponse",
         description = "Thông tin trả về sau khi đăng nhập thành công"
@@ -30,44 +34,4 @@ public class LoginResponse {
 
     @Schema(description = "Vai trò của người dùng trong hệ thống", example = "owner")
     private final String role;
-
-    public LoginResponse(
-            String accessToken,
-            String refreshToken,
-            UUID sessionId,
-            long expiresIn,
-            UUID userId,
-            String role) {
-
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-        this.sessionId = sessionId;
-        this.expiresIn = expiresIn;
-        this.userId = userId;
-        this.role = role;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public UUID getSessionId() {
-        return sessionId;
-    }
-
-    public long getExpiresIn() {
-        return expiresIn;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getRole() {
-        return role;
-    }
 }

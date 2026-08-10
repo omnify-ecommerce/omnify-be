@@ -1,10 +1,14 @@
 package com.omnify.auth.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+@Getter
+@Builder
 @Schema(
         name = "SessionResponse",
         description = "Thông tin của một phiên đăng nhập"
@@ -22,7 +26,6 @@ public class SessionResponse {
             example = "Chrome on Windows 11"
     )
     private final String deviceName;
-
 
     @Schema(
             description = "Địa chỉ IP của phiên đăng nhập",
@@ -47,45 +50,4 @@ public class SessionResponse {
             example = "true"
     )
     private final boolean current;
-
-    public SessionResponse(
-            UUID sessionId,
-            String deviceName,
-            String ipAddress,
-            OffsetDateTime lastUsedAt,
-            OffsetDateTime createdAt,
-            boolean current) {
-
-        this.sessionId = sessionId;
-        this.deviceName = deviceName;
-        this.ipAddress = ipAddress;
-        this.lastUsedAt = lastUsedAt;
-        this.createdAt = createdAt;
-        this.current = current;
-    }
-
-    public UUID getSessionId() {
-        return sessionId;
-    }
-
-    public String getDeviceName() {
-        return deviceName;
-    }
-
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public OffsetDateTime getLastUsedAt() {
-        return lastUsedAt;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public boolean isCurrent() {
-        return current;
-    }
 }

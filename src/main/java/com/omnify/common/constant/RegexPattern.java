@@ -11,5 +11,5 @@ public final class RegexPattern {
     public static final String PHONE_VN = "^(\\+84|0)(3|5|7|8|9)[0-9]{8}$";
 
     // Tối thiểu 8 ký tự, có chữ hoa, chữ thường, số
-    public static final String PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,72}$";
+    public static final String PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$";
 }

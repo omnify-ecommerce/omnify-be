@@ -1,9 +1,13 @@
 package com.omnify.auth.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.util.UUID;
 
+@Getter
+@Builder
 @Schema(
         name = "RegisterResponse",
         description = "Thông tin trả về sau khi đăng ký tài khoản thành công"
@@ -21,27 +25,4 @@ public class RegisterResponse {
 
     @Schema(description = "Vai trò được gán cho người dùng", example = "owner")
     private final String assignedRole;
-
-    public RegisterResponse(UUID userId, String status, String verificationChannel, String assignedRole) {
-        this.userId = userId;
-        this.status = status;
-        this.verificationChannel = verificationChannel;
-        this.assignedRole = assignedRole;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getVerificationChannel() {
-        return verificationChannel;
-    }
-
-    public String getAssignedRole() {
-        return assignedRole;
-    }
 }

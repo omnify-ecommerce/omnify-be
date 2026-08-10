@@ -2,6 +2,8 @@ package com.omnify.auth.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -9,6 +11,8 @@ import java.util.UUID;
         name = "LogoutRequest",
         description = "Yêu cầu đăng xuất một phiên đăng nhập cụ thể"
 )
+@Getter
+@Setter
 public class LogoutRequest {
 
     @NotNull(message = "sessionId không được để trống")
@@ -19,11 +23,4 @@ public class LogoutRequest {
     )
     private UUID sessionId;
 
-    public UUID getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
 }

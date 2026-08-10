@@ -6,6 +6,7 @@ import com.omnify.auth.domain.entity.User;
 import com.omnify.auth.domain.entity.UserStatus;
 import com.omnify.auth.domain.entity.VerificationToken;
 import com.omnify.auth.infrastructure.DeviceInfoParser;
+import com.omnify.auth.notification.DuplicateRegistrationEvent;
 import com.omnify.auth.notification.UserRegisteredEvent;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -97,11 +99,21 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        if (request.getEmail() != null && userRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
-        }
-        if (request.getPhone() != null && userRepository.existsByPhone(request.getPhone())) {
-            throw new BusinessException(ErrorCode.PHONE_ALREADY_EXISTS);
+        boolean emailTaken = request.getEmail() != null && userRepository.existsByEmail(request.getEmail());
+        boolean phoneTaken = request.getPhone() != null && userRepository.existsByPhone(request.getPhone());
+
+        if (emailTaken || phoneTaken) {
+            // KHÔNG throw lỗi, KHÔNG tiết lộ email/phone đã tồn tại hay chưa.
+            // Trả về response cùng loại với luồng thành công thật, kèm userId giả
+            if (emailTaken) {
+                eventPublisher.publishEvent(new DuplicateRegistrationEvent(request.getEmail()));
+            }
+            return RegisterResponse.builder()
+                    .userId(UUID.randomUUID())
+                    .status(UserStatus.PENDING.name())
+                    .verificationChannel(VerificationToken.Type.EMAIL_VERIFICATION.name())
+                    .assignedRole(OWNER_ROLE)
+                    .build();
         }
 
         String passwordHash = passwordEncoder.encode(request.getPassword());
@@ -143,7 +155,12 @@ public class AuthServiceImpl implements AuthService {
                 tokenType
         ));
 
-        return new RegisterResponse(user.getId(), user.getStatus().name(), tokenType.name(), OWNER_ROLE);
+        return RegisterResponse.builder()
+                .userId(user.getId())
+                .status(user.getStatus().name())
+                .verificationChannel(tokenType.name())
+                .assignedRole(OWNER_ROLE)
+                .build();
     }
 
     @Override
@@ -193,8 +210,14 @@ public class AuthServiceImpl implements AuthService {
         );
         refreshTokenRepository.save(refreshToken);
 
-        return new LoginResponse(accessToken, rawRefreshToken, refreshToken.getId(),
-                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), role);
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(rawRefreshToken)
+                .sessionId(refreshToken.getId())
+                .expiresIn(jwtTokenProvider.getAccessTokenTtlSeconds())
+                .userId(user.getId())
+                .role(role)
+                .build();
     }
 
     @Override
@@ -320,7 +343,13 @@ public class AuthServiceImpl implements AuthService {
         );
         refreshTokenRepository.save(newToken);
 
-        return new LoginResponse(accessToken, newRawRefreshToken, newToken.getId(),
-                jwtTokenProvider.getAccessTokenTtlSeconds(), user.getId(), role);
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(newRawRefreshToken)
+                .sessionId(newToken.getId())
+                .expiresIn(jwtTokenProvider.getAccessTokenTtlSeconds())
+                .userId(user.getId())
+                .role(role)
+                .build();
     }
 }

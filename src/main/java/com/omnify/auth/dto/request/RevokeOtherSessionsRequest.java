@@ -2,6 +2,8 @@ package com.omnify.auth.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -9,6 +11,8 @@ import java.util.UUID;
         name = "RevokeOtherSessionsRequest",
         description = "Yêu cầu đăng xuất tất cả các phiên đăng nhập khác, ngoại trừ phiên hiện tại"
 )
+@Getter
+@Setter
 public class RevokeOtherSessionsRequest {
 
     @NotNull(message = "currentSessionId không được để trống")
@@ -18,12 +22,4 @@ public class RevokeOtherSessionsRequest {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private UUID currentSessionId;
-
-    public UUID getCurrentSessionId() {
-        return currentSessionId;
-    }
-
-    public void setCurrentSessionId(UUID currentSessionId) {
-        this.currentSessionId = currentSessionId;
-    }
 }

@@ -102,6 +102,7 @@ app:
     phone-token-ttl-minutes: 5
     resend-cooldown-seconds: 60
     max-otp-attempts: 5
+    duplicate-registration-alert-cooldown-seconds: 86400   # 24 giờ
 
 springdoc:
   api-docs:
