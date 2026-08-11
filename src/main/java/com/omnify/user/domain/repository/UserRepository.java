@@ -1,6 +1,6 @@
-package com.omnify.auth.domain.repository;
+package com.omnify.user.domain.repository;
 
-import com.omnify.auth.domain.entity.User;
+import com.omnify.user.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -40,7 +40,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-
+    
     @Modifying
     @Query("UPDATE RefreshToken rt SET rt.status = :revokedStatus, rt.revokedAt = CURRENT_TIMESTAMP " +
             "WHERE rt.userId = :userId AND rt.status = :validStatus")

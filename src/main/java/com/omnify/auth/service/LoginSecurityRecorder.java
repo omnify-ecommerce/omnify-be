@@ -4,7 +4,7 @@ import com.omnify.auth.domain.entity.LoginAttempt;
 import com.omnify.auth.domain.entity.RefreshToken;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
-import com.omnify.auth.domain.repository.UserRepository;
+import com.omnify.user.domain.repository.UserRepository;
 import com.omnify.auth.infrastructure.LockoutProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;

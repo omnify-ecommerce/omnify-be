@@ -1,4 +1,4 @@
-package com.omnify.auth.domain.entity;
+package com.omnify.user.domain.entity;
 
 public enum UserStatus {
     ACTIVE,

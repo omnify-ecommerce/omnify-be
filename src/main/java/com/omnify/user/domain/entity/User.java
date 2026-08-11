@@ -1,4 +1,4 @@
-package com.omnify.auth.domain.entity;
+package com.omnify.user.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -116,5 +116,9 @@ public class User {
         this.failedLoginCount = 0;
         this.lockedUntil = null;
         this.lastLoginAt = OffsetDateTime.now();
+    }
+
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
     }
 }

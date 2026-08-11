@@ -2,15 +2,15 @@ package com.omnify.auth.service;
 
 import com.omnify.auth.domain.entity.LoginAttempt;
 import com.omnify.auth.domain.entity.RefreshToken;
-import com.omnify.auth.domain.entity.User;
-import com.omnify.auth.domain.entity.UserStatus;
+import com.omnify.user.domain.entity.User;
+import com.omnify.user.domain.entity.UserStatus;
 import com.omnify.auth.domain.entity.VerificationToken;
 import com.omnify.auth.infrastructure.DeviceInfoParser;
 import com.omnify.auth.notification.DuplicateRegistrationEvent;
 import com.omnify.auth.notification.UserRegisteredEvent;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
-import com.omnify.auth.domain.repository.UserRepository;
+import com.omnify.user.domain.repository.UserRepository;
 import com.omnify.auth.domain.repository.VerificationTokenRepository;
 import com.omnify.auth.dto.request.LoginRequest;
 import com.omnify.auth.dto.request.RegisterRequest;
@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -103,17 +102,11 @@ public class AuthServiceImpl implements AuthService {
         boolean phoneTaken = request.getPhone() != null && userRepository.existsByPhone(request.getPhone());
 
         if (emailTaken || phoneTaken) {
-            // KHÔNG throw lỗi, KHÔNG tiết lộ email/phone đã tồn tại hay chưa.
-            // Trả về response cùng loại với luồng thành công thật, kèm userId giả
             if (emailTaken) {
                 eventPublisher.publishEvent(new DuplicateRegistrationEvent(request.getEmail()));
+                throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
             }
-            return RegisterResponse.builder()
-                    .userId(UUID.randomUUID())
-                    .status(UserStatus.PENDING.name())
-                    .verificationChannel(VerificationToken.Type.EMAIL_VERIFICATION.name())
-                    .assignedRole(OWNER_ROLE)
-                    .build();
+            throw new BusinessException(ErrorCode.PHONE_ALREADY_EXISTS);
         }
 
         String passwordHash = passwordEncoder.encode(request.getPassword());

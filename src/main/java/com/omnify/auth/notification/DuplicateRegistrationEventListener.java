@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.omnify.auth.domain.repository.UserRepository;
+import com.omnify.user.domain.repository.UserRepository;
 
 @Component
 public class DuplicateRegistrationEventListener {
@@ -24,7 +24,7 @@ public class DuplicateRegistrationEventListener {
     }
 
     @Async("mailTaskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
     public void onDuplicateRegistration(DuplicateRegistrationEvent event) {
         userRepository.findByEmail(event.getEmail()).ifPresentOrElse(
                 user -> securityAlertEmailSender.sendDuplicateRegistrationAlert(user.getEmail(), user.getFullName()),
