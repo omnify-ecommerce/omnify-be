@@ -4,10 +4,8 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dữ liệu đầu vào không hợp lệ"),
-    INVALID_CONTACT(HttpStatus.BAD_REQUEST, "Phải cung cấp email hoặc số điện thoại"),
     TOKEN_INVALID(HttpStatus.BAD_REQUEST, "Token xác thực không hợp lệ"),
     TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "Token xác thực đã hết hạn"),
-    TOKEN_ALREADY_USED( HttpStatus.BAD_REQUEST,"Token đã được sử dụng"),
     OTP_INVALID(HttpStatus.BAD_REQUEST, "Mã xác thực không đúng"),
     INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không hợp lệ"),
     NEW_PASSWORD_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "Mật khẩu mới trùng với mật khẩu hiện tại"),

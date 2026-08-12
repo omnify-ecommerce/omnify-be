@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -114,7 +115,8 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .passwordHash(passwordHash)
-                .fullName(request.getFullName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .build();
         user = userRepository.save(user);
 
@@ -178,7 +180,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        if (user.getStatus() != UserStatus.ACTIVE) {
+        if (user.getStatus() == UserStatus.PENDING) {
             LoginAttempt.FailureReason reason = user.isEmailVerified()
                     ? LoginAttempt.FailureReason.PHONE_NOT_VERIFIED
                     : LoginAttempt.FailureReason.EMAIL_NOT_VERIFIED;
@@ -227,9 +229,6 @@ public class AuthServiceImpl implements AuthService {
                 .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_INVALID));
 
-        if (token.isUsed()) {
-            throw new BusinessException(ErrorCode.TOKEN_ALREADY_USED);
-        }
         if (token.isExpired()) {
             throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         }
@@ -314,7 +313,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(token.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getStatus() != UserStatus.ACTIVE) {
+        if (user.getStatus() == UserStatus.PENDING) {
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED);
         }
 
@@ -344,5 +343,21 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getId())
                 .role(role)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void logout(String rawRefreshToken, UUID userId) {
+        String tokenHash= refreshTokenGenerator.hash(rawRefreshToken);
+        RefreshToken token = refreshTokenRepository.findByTokenHash(tokenHash)
+            .orElseThrow(()-> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID));
+        if (!token.getUserId().equals(userId)){
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
+        //
+        if (token.getStatus()== RefreshToken.Status.VALID){
+            token.revoke();
+            refreshTokenRepository.save(token);
+        }
     }
 }

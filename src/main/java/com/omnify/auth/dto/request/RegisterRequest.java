@@ -1,6 +1,8 @@
 package com.omnify.auth.dto.request;
 
 import com.omnify.common.constant.RegexPattern;
+import com.omnify.common.validation.AtLeastOneContact;
+import com.omnify.common.validation.EmailOrPhoneCarrier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -10,10 +12,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RegisterRequest {
+@AtLeastOneContact
+public class RegisterRequest implements EmailOrPhoneCarrier {
 
     @Schema(description = "Email đăng ký", example = "owner@omnify.vn", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "Email không được để trống")
     @Pattern(regexp = RegexPattern.EMAIL, message = "Email không đúng định dạng")
     private String email;
 
@@ -28,14 +30,18 @@ public class RegisterRequest {
             message = "Mật khẩu tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số")
     private String password;
 
-    @Schema(description = "Họ tên người đăng ký (owner)", example = "Nguyễn Văn A")
-    @NotBlank(message = "Họ tên không được để trống")
-    @Size(max = 255, message = "Họ tên tối đa 255 ký tự")
-    private String fullName;
+    @Schema( description = "Tên riêng của user", example = "Tu")
+    @NotBlank(message = "Tên riêng không được để trống")
+    @Size(max=100, message = "Tên riêng tối đa 100 kí tự")
+    private String firstName;
 
+    @Schema( description = "Họ tên của user", example = "Nguyen")
+    @NotBlank(message = "Họ tên không được để trống")
+    @Size(max=100, message = "Họ tên tối đa 100 kí tự")
+    private String lastName;
 
     public void setEmail(String email) {
-        this.email = (email == null) ? null : email.trim();
+        this.email = (email == null || email.isBlank()) ? null : email.trim();
     }
     public void setPhone(String phone) {
         this.phone = (phone == null || phone.isBlank()) ? null : phone.trim();

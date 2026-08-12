@@ -33,6 +33,12 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name="first_name", nullable = false, length = 100)
+    private String firstName;
+
+    @Column(name="last_name", nullable = false, length = 100)
+    private String lastName;
+
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
@@ -81,12 +87,15 @@ public class User {
             String email,
             String phone,
             String passwordHash,
-            String fullName
+            String firstName,
+            String lastName
     ) {
         this.email = email;
         this.phone = phone;
         this.passwordHash = passwordHash;
-        this.fullName = fullName;
+        this.firstName= firstName;
+        this.lastName = lastName;
+        this.fullName = composeFullName(lastName, firstName);
     }
 
     public boolean isLocked() {
@@ -103,15 +112,6 @@ public class User {
         this.status = UserStatus.ACTIVE;
     }
 
-    public void registerFailedAttempt(int maxFailedAttempts, int lockDurationMinutes) {
-        this.failedLoginCount++;
-        this.lastFailedLoginAt = OffsetDateTime.now();
-
-        if (this.failedLoginCount >= maxFailedAttempts) {
-            this.lockedUntil = OffsetDateTime.now().plusMinutes(lockDurationMinutes);
-        }
-    }
-
     public void registerSuccessfulLogin() {
         this.failedLoginCount = 0;
         this.lockedUntil = null;
@@ -120,5 +120,10 @@ public class User {
 
     public void changePassword(String newPasswordHash) {
         this.passwordHash = newPasswordHash;
+    }
+
+    //dinh dang ten kieu vn ho truoc ten sau
+    private static String composeFullName( String lastName, String firstName){
+        return (lastName + " " + firstName).trim();
     }
 }

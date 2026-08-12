@@ -9,18 +9,18 @@ import java.util.UUID;
 
 @Schema(
         name = "LogoutRequest",
-        description = "Yêu cầu đăng xuất một phiên đăng nhập cụ thể"
+        description = "Yêu cầu đăng xuất phiên đăng nhập hiện tại"
 )
 @Getter
 @Setter
 public class LogoutRequest {
 
-    @NotNull(message = "sessionId không được để trống")
+    @NotNull(message = "refresh token không được để trống")
     @Schema(
-            description = "ID của phiên đăng nhập cần đăng xuất",
-            example = "7314e147-1301-4e61-8988-3a543cad9608",
+            description = "Refresh token của phiên hiện tại cần đăng xuất",
+            example = "D4DaQHdH79qfbnoP8Lwf06ZNIINi7fYU-xE9YSu5gnc",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private UUID sessionId;
+    private String refreshToken;
 
 }

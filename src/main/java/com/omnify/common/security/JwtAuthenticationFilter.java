@@ -49,7 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 var authentication = new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtException | IllegalArgumentException ex) {
-                // Token invalid/expired -> để request đi tiếp không auth, SecurityFilterChain sẽ trả 401
                 SecurityContextHolder.clearContext();
             }
         }

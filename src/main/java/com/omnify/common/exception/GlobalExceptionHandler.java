@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.stream.Collectors;
 
@@ -45,6 +47,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error("DUPLICATE_RESOURCE", "Dữ liệu đã tồn tại, vui lòng kiểm tra lại"));
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        log.warn("Malformed request body: {}", ex.getMessage());
+        return ResponseEntity
+            .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
+            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), "Dữ liệu đầu vào không hợp lệ"));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        log.warn("Type mismatch: param='{}', requiredType='{}', rejectedValue='{}'",
+            ex.getName(), requiredType, ex.getValue());
+        String message = String.format("Tham số '%s' không đúng định dạng", ex.getName());
+        return ResponseEntity
+            .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
+            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
     }
 
     @ExceptionHandler(Exception.class)
