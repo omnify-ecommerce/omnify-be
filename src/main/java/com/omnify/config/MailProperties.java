@@ -1,4 +1,4 @@
-package com.omnify.common.config;
+package com.omnify.config;
 
 import lombok.Getter;
 import lombok.Setter;

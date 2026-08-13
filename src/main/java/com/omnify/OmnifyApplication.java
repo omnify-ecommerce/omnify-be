@@ -1,7 +1,7 @@
 package com.omnify;
 
 import com.omnify.auth.infrastructure.LockoutProperties;
-import com.omnify.common.security.RateLimitProperties;
+import com.omnify.security.RateLimitProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

@@ -1,4 +1,4 @@
-package com.omnify.common.security;
+package com.omnify.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.omnify.common.exception.ErrorCode;

@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.omnify.common.response.ApiResponse;
-import com.omnify.common.security.AuthenticatedUser;
+import com.omnify.security.AuthenticatedUser;
 import com.omnify.user.dto.request.ChangePasswordRequest;
 import com.omnify.user.service.UserService;
 

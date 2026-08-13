@@ -1,4 +1,4 @@
-package com.omnify.common.security;
+package com.omnify.security;
 
 import java.util.UUID;
 

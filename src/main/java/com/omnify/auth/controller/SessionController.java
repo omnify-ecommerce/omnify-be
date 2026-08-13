@@ -3,7 +3,7 @@ package com.omnify.auth.controller;
 import com.omnify.auth.dto.request.RevokeOtherSessionsRequest;
 import com.omnify.auth.dto.response.SessionResponse;
 import com.omnify.auth.service.SessionService;
-import com.omnify.common.security.AuthenticatedUser;
+import com.omnify.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

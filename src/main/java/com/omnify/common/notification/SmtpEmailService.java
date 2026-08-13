@@ -1,6 +1,6 @@
 package com.omnify.common.notification;
 
-import com.omnify.common.config.MailProperties;
+import com.omnify.config.MailProperties;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

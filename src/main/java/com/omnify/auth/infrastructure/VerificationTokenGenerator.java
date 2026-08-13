@@ -1,6 +1,6 @@
 package com.omnify.auth.infrastructure;
 
-import com.omnify.common.security.TokenHasher;
+import com.omnify.security.TokenHasher;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;

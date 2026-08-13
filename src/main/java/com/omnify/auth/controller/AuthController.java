@@ -5,7 +5,7 @@ import com.omnify.auth.dto.response.LoginResponse;
 import com.omnify.auth.dto.response.RegisterResponse;
 import com.omnify.auth.service.AuthService;
 import com.omnify.auth.service.SessionService;
-import com.omnify.common.security.AuthenticatedUser;
+import com.omnify.security.AuthenticatedUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

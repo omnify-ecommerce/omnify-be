@@ -1,4 +1,4 @@
-package com.omnify.common.config;
+package com.omnify.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
