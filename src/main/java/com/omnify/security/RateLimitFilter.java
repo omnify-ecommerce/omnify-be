@@ -16,12 +16,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-
+/*Rate limit request theo IP và từng nhóm endpoint (rule)
+ chạy đầu tiên trong filter chain đã set bên security config , su dung redis rratelimiter của redissson */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RedissonClient redissonClient;
-    private final RateLimitProperties properties;
+    private final RateLimitProperties properties; //class quyet dinh cau hinh khi ratelimit
     private final ObjectMapper objectMapper;
 
     public RateLimitFilter(RedissonClient redissonClient, RateLimitProperties properties, ObjectMapper objectMapper) {
@@ -33,20 +34,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-
+        // Endpoint khong khop rule nao da set ben ratelimitproperties -> cho pass
         RateLimitProperties.Rule rule = properties.match(request.getRequestURI());
         if (rule == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
+        // Moi rule +IP co 1 bo diem rieng tren redis tranh dung nhau giua cac endpoint
         String clientIp = resolveClientIp(request);
         String key = "rate_limit:" + rule.name() + ":" + clientIp;
 
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(key);
-        // trySetRate chỉ có tác dụng lần đầu tạo key trên Redis, gọi lại vô hại (idempotent)
+        // SEt rate cho key nay, neu key nay da ton tai tu truoc thi goi lai se khong thuc hien gi
         rateLimiter.trySetRate(RateType.OVERALL, rule.capacity(), rule.refreshPeriodSeconds(), RateIntervalUnit.SECONDS);
-        // set TTL để key tự dọn rác, tránh Redis phình to vô hạn vì IP vãng lai
+        //Dat TTL de redis tu dong don key cua ip inactive
         rateLimiter.expire(Duration.ofSeconds(rule.refreshPeriodSeconds() * 2));
 
         if (!rateLimiter.tryAcquire(1)) {
@@ -63,8 +64,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        // CHỈ tin X-Forwarded-For khi có LB/reverse-proxy đứng trước xóa header client tự set.
-        // Local/dev chưa có proxy thì cứ getRemoteAddr() cho chắc, đừng trust header mù quáng.
         String forwardedFor = request.getHeader("X-Forwarded-For");
         if (forwardedFor != null && !forwardedFor.isBlank()) {
             return forwardedFor.split(",")[0].trim();

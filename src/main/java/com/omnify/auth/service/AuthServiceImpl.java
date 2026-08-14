@@ -56,13 +56,13 @@ public class AuthServiceImpl implements AuthService {
 
     private static final String OWNER_ROLE = "owner";
 
-    @Value("${app.verification.phone-token-ttl-minutes}")
+    @Value("${omnify.verification.phone-token-ttl-minutes}")
     private int phoneOtpTtlMinutes;
-    @Value("${app.verification.resend-cooldown-seconds}")
+    @Value("${omnify.verification.resend-cooldown-seconds}")
     private long resendCooldownSeconds;
-    @Value("${app.verification.max-otp-attempts}")
+    @Value("${omnify.verification.max-otp-attempts}")
     private int maxOtpAttempts;
-    @Value("${app.verification.email-token-ttl-minutes}")
+    @Value("${omnify.verification.email-token-ttl-minutes}")
     private int emailTokenTtlMinutes;
 
     public AuthServiceImpl(UserRepository userRepository,
@@ -227,7 +227,7 @@ public class AuthServiceImpl implements AuthService {
 
         VerificationToken token = verificationTokenRepository
                 .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION)
-                .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_INVALID));
+                .orElseThrow(() -> new BusinessException(ErrorCode.OTP_INVALID));
 
         if (token.isExpired()) {
             throw new BusinessException(ErrorCode.TOKEN_EXPIRED);

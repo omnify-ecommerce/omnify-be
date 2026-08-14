@@ -66,7 +66,22 @@ public class GlobalExceptionHandler {
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
             .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
     }
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(
+        org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        log.warn("No route matched: {}", ex.getResourcePath());
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.error("SESSION_NOT_FOUND", "Đường dẫn không hợp lệ"));
+    }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
+        return ResponseEntity
+            .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
+            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), "Tham số truyền vào không hợp lệ"));
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);

@@ -14,13 +14,13 @@ import java.util.UUID;
 )
 public class RegisterResponse {
 
-    @Schema(description = "ID của người dùng vừa được tạo", example = "550e8400-e29b-41d4-a716-446655440000")
+    @Schema(description = "ID của người dùng vừa được tạo", example = "eee5a030-6b88-4f84-9a07-51004e3398de")
     private final UUID userId;
 
     @Schema(description = "Trạng thái của tài khoản sau khi đăng ký", example = "PENDING")
     private final String status;
 
-    @Schema(description = "Kênh xác thực được sử dụng", example = "EMAIL_VERIFY")
+    @Schema(description = "Kênh xác thực được sử dụng", example = "EMAIL_VERIFICATION")
     private final String verificationChannel;
 
     @Schema(description = "Vai trò được gán cho người dùng", example = "owner")

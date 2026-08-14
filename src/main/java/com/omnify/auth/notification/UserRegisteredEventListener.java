@@ -7,7 +7,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.stereotype.Component;
-
+//class nay de kiem tra xem neu transaction cua luong email thanh cong chua va valid 1 so thong tin, neu
+// thanh cong chuyen du lieu sach cho verificationemailsender tiep tuc xu li
 @Component
 public class UserRegisteredEventListener {
 
@@ -18,7 +19,8 @@ public class UserRegisteredEventListener {
     public UserRegisteredEventListener(VerificationEmailSender verificationEmailSender) {
         this.verificationEmailSender = verificationEmailSender;
     }
-
+    //su dung async de tao 1 thread rieng voi luong chinh, va @TransactionalEventListener giup doan code chay khi
+    // publish 1 userRegisteredEvent
     @Async("mailTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onUserRegistered(UserRegisteredEvent event) {

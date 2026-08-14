@@ -15,7 +15,7 @@ import lombok.Setter;
 @AtLeastOneContact
 public class RegisterRequest implements EmailOrPhoneCarrier {
 
-    @Schema(description = "Email đăng ký", example = "owner@omnify.vn", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Email đăng ký", example = "user123@gmail.com", requiredMode = Schema.RequiredMode.REQUIRED)
     @Pattern(regexp = RegexPattern.EMAIL, message = "Email không đúng định dạng")
     private String email;
 

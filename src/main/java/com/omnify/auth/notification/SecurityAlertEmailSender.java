@@ -22,7 +22,7 @@ public class SecurityAlertEmailSender {
 
     public SecurityAlertEmailSender(EmailService emailService,
                                     RedissonClient redissonClient,
-                                    @Value("${app.verification.duplicate-registration-alert-cooldown-seconds}") long cooldownSeconds) {
+                                    @Value("${omnify.verification.duplicate-registration-alert-cooldown-seconds}") long cooldownSeconds) {
         this.emailService = emailService;
         this.redissonClient = redissonClient;
         this.cooldownSeconds = cooldownSeconds;

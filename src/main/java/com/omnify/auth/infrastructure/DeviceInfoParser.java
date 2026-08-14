@@ -4,7 +4,8 @@ import org.springframework.stereotype.Component;
 import ua_parser.Client;
 import ua_parser.Parser;
 
-
+//Class nay co nhiem vu doc chuoi user-agent cua HTTP request doi chuyen no thanh ten thiet bi de doc VD
+//Mozilla/5.0 ... Chrome/... Windows NT... thanh Chome on Window10
 @Component
 public class DeviceInfoParser {
 
@@ -15,6 +16,7 @@ public class DeviceInfoParser {
             return "Unknown device";
         }
         try {
+            //trich xuat thong tin cua client vab browser tu userAgent tu 2 ham extractbrowser va os viet o duoi
             Client client = uaParser.parse(userAgent);
             String browser = extractBrowser(client);
             String os = extractOs(client);
@@ -35,6 +37,7 @@ public class DeviceInfoParser {
     }
 
     private String extractBrowser(Client client) {
+        //neu khong xac dinh duoc browser hay client tra ve other thi tra ve null
         if (client.userAgent == null
                 || client.userAgent.family == null
                 || "Other".equals(client.userAgent.family)) {
@@ -44,9 +47,11 @@ public class DeviceInfoParser {
     }
 
     private String extractOs(Client client) {
+        //neu khong xac dinh duoc os hay client tra ve other thi tra ve null
         if (client.os == null || client.os.family == null || "Other".equals(client.os.family)) {
             return null;
         }
+        //neu duoc thi noi them version cua os vao
         StringBuilder sb = new StringBuilder(client.os.family);
         if (client.os.major != null) {
             sb.append(' ').append(client.os.major);

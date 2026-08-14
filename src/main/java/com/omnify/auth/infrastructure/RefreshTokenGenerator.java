@@ -22,7 +22,7 @@ public class RefreshTokenGenerator {
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
-
+    //hash refresh token thông qua class tokenhasher
     public String hash(String rawValue) {
         return tokenHasher.hash(rawValue);
     }

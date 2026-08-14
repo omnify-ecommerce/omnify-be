@@ -7,7 +7,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+//class nay dung de config viet tai lieu swagger
 @Configuration
 public class OpenApiConfig {
 

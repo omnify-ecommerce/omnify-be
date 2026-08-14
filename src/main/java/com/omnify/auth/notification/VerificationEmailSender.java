@@ -2,7 +2,7 @@ package com.omnify.auth.notification;
 
 import com.omnify.common.notification.EmailService;
 import org.springframework.stereotype.Component;
-
+//class nay se tao subject va noi dung cua email dang ky sau do chuyen viec gui mail cho email service
 @Component
 public class VerificationEmailSender {
 
