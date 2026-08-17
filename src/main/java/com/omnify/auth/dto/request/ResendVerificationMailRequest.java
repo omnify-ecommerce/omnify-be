@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ResendVerificationRequest {
+public class ResendVerificationMailRequest {
 
     @Schema(
         example = "user@example.com",

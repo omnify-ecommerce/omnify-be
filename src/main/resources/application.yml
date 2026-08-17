@@ -86,6 +86,14 @@ omnify:
           path: /api/v1/auth/verify-email
           capacity: 5
           refresh-period-seconds: 60
+        verify-phone:
+          path: /api/v1/auth/verify-phone
+          capacity: 5
+          refresh-period-seconds: 60
+        resend-verification-phone:
+          path: /api/v1/auth/resend-verification-phone
+          capacity: 3
+          refresh-period-seconds: 60
   mail:
     from-address: ${MAIL_FROM_ADDRESS}
     from-name: ${MAIL_FROM_NAME:Omnify}

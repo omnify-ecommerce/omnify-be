@@ -15,4 +15,6 @@ public interface AuthService {
     void resendVerificationEmail(String email);
     LoginResponse refreshToken(String rawRefreshToken, String ipAddress, String userAgent);
     void logout(String rawRefreshToken, UUID userId);
+    void verifyPhone (String phone, String otpCode);
+    void resendVerificationPhone(String phone);
 }

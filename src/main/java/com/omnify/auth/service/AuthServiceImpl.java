@@ -360,4 +360,88 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenRepository.save(token);
         }
     }
+
+    @Override
+    @Transactional
+    public void verifyPhone(String phone, String otpCode) {
+        User user = userRepository.findByPhone(phone)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isPhoneVerified()){
+            throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
+        }
+
+        VerificationToken token = verificationTokenRepository
+            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.PHONE_VERIFICATION)
+            .orElseThrow(()-> new BusinessException(ErrorCode.OTP_INVALID));
+
+        if (token.isExpired()){
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        }
+
+        if (token.getAttemptCount() >= maxOtpAttempts){
+            throw new BusinessException(ErrorCode.OTP_LOCKED);
+        }
+
+        String inputHash= tokenHasher.hash(otpCode);
+
+        if (!inputHash.equals(token.getTokenHash())){
+            int attemptsSoFar = verificationAttemptRecorder.recordFailedAttempt(token.getId());
+            if (attemptsSoFar >= maxOtpAttempts){
+                throw new BusinessException(ErrorCode.OTP_LOCKED);
+            }
+            throw new BusinessException(ErrorCode.OTP_INVALID);
+        }
+
+        user.markPhoneVerified();
+        token.markUsed();
+
+        userRepository.save(user);
+        verificationTokenRepository.save(token);
+    }
+
+    @Override
+    @Transactional
+    public void resendVerificationPhone(String phone) {
+        User user = userRepository.findByPhone(phone)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isPhoneVerified()){
+            throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
+        }
+
+        Optional<VerificationToken> lastToken= verificationTokenRepository
+            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.PHONE_VERIFICATION);
+
+        if (lastToken.isPresent()){
+            VerificationToken last= lastToken.get();
+            OffsetDateTime nextAllowedAt= last.getCreatedAt().plusSeconds(resendCooldownSeconds);
+            if (OffsetDateTime.now().isBefore(nextAllowedAt)){
+                throw new BusinessException(ErrorCode.RESEND_COOLDOWN);
+            }
+            if (!last.isUsed()){
+                last.markUsed();
+                verificationTokenRepository.save(last);
+            }
+        }
+
+        String rawOtp= verificationTokenGenerator.generatePhoneOtp();
+        VerificationToken newToken= VerificationToken.issue(
+            user.getId(),
+            verificationTokenGenerator.hash(rawOtp),
+            VerificationToken.Type.PHONE_VERIFICATION,
+            OffsetDateTime.now().plusMinutes(phoneOtpTtlMinutes)
+        );
+        verificationTokenRepository.save(newToken);
+
+        eventPublisher.publishEvent(new UserRegisteredEvent(
+            user.getId(),
+            user.getFullName(),
+            user.getEmail(),
+            user.getPhone(),
+            rawOtp,
+            VerificationToken.Type.PHONE_VERIFICATION
+
+        ));
+    }
 }

@@ -4,12 +4,10 @@ import com.omnify.auth.dto.request.*;
 import com.omnify.auth.dto.response.LoginResponse;
 import com.omnify.auth.dto.response.RegisterResponse;
 import com.omnify.auth.service.AuthService;
-import com.omnify.auth.service.SessionService;
 import com.omnify.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -311,7 +309,7 @@ public class AuthController {
     })
     @PostMapping("/resend-verification")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> resendVerification(
-        @Valid @RequestBody ResendVerificationRequest request) {
+        @Valid @RequestBody ResendVerificationMailRequest request) {
         authService.resendVerificationEmail(request.getEmail());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Email xác thực đã được gửi lại"));
     }
@@ -388,4 +386,19 @@ public class AuthController {
         LoginResponse response = authService.refreshToken(request.getRefreshToken(), ipAddress, userAgent);
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(response, "Làm mới token thành công"));
     }
+
+    @PostMapping("/verify-phone")
+    public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> verifyPhone(
+        @Valid @RequestBody VerifyPhoneRequest request){
+        authService.verifyPhone(request.getPhone(), request.getOtpCode());
+        return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Xac thuc so dien thoai thanh cong"));
+    }
+
+    @PostMapping("/resend-verification-phone")
+    public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> resendVerificationPhone(
+        @Valid @RequestBody ResendVerificationPhoneRequest request){
+        authService.resendVerificationPhone(request.getPhone());
+        return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Gui lai so xac thuc dien thoai thanh cong"));
+    }
+
 }
