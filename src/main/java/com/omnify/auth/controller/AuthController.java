@@ -386,7 +386,56 @@ public class AuthController {
         LoginResponse response = authService.refreshToken(request.getRefreshToken(), ipAddress, userAgent);
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(response, "Làm mới token thành công"));
     }
-
+    @Operation(
+        summary = "Verify phone",
+        description = "Verify the user account using the phone SMS"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Account verification successful.",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                        {
+                             "success": true,
+                             "message": "Xác thực tài khoản qua SĐT thành công",
+                             "data": null,
+                             "errorCode": null,
+                             "timestamp": "2026-08-14T03:21:38.025920Z"
+                         }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR - SDT must be valid. Verification code must contain" +
+                "exactly 6 digits. SDT and verification code cannot be empty. <br>" +
+                "TOKEN_EXPIRED - The verification token has expired.<br>" +
+                "OTP_INVALID - The verification code is incorrect.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "USER_NOT_FOUND - The user could not be found.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "ACCOUNT_ALREADY_VERIFIED - The account has already been verified.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "429",
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "INTERNAL_ERROR - An internal server error occured. Please try again later",
+            content = @Content
+        )
+    })
     @PostMapping("/verify-phone")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> verifyPhone(
         @Valid @RequestBody VerifyPhoneRequest request){
@@ -394,6 +443,54 @@ public class AuthController {
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Xac thuc so dien thoai thanh cong"));
     }
 
+    @Operation(
+        summary = "Resend number verification code",
+        description = "Resend the number verification OTP to the user by SMS."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Verification email has been resent.",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                        {
+                             "success": true,
+                             "message": "Mã SDT xác thực đã được gửi lại",
+                             "data": null,
+                             "errorCode": null,
+                             "timestamp": "2026-08-14T03:21:38.025920Z"
+                         }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR - SDT cannot be empty and must have a valid format",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "USER_NOT_FOUND - The user could not be found",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "ACCOUNT_ALREADY_VERIFIED - The account has already been verified.<br>" +
+                "RESEND_COOLDOWN - Please wait before requesting another verification number SMS.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "429",
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "INTERNAL_ERROR - An internal server error occured. Please try again later",
+            content = @Content
+        )
+    })
     @PostMapping("/resend-verification-phone")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> resendVerificationPhone(
         @Valid @RequestBody ResendVerificationPhoneRequest request){
