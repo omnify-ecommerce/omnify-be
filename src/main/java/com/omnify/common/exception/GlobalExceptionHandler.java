@@ -31,9 +31,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining("; "));
+        String message = ex.getBindingResult().getAllErrors().stream()
+            .map(org.springframework.validation.ObjectError::getDefaultMessage)
+            .collect(Collectors.joining("; "));
         log.warn("Validation exception: {}", message);
         return ResponseEntity
                 .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())

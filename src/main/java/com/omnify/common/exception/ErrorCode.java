@@ -12,6 +12,7 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được sử dụng"),
     PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng"),
     ACCOUNT_ALREADY_VERIFIED( HttpStatus.CONFLICT, "Tài khoản đã được xác thực"),
+    ACCOUNT_PENDING_VERIFICATION(HttpStatus.CONFLICT, "Tài khoản đã được đăng ký nhưng chưa xác thực, vui lòng xác thực tài khoản"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"),
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy phiên đăng nhập hoặc đã đăng xuất"),
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "Tài khoản đang bị tạm khóa"),

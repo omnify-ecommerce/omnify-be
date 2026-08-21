@@ -11,6 +11,9 @@ public class AtLeastOneContactValidator implements ConstraintValidator<AtLeastOn
         if (value == null) {
             return true;
         }
-        return StringUtils.hasText(value.getEmail()) || StringUtils.hasText(value.getPhone());
+        boolean hasEmail = StringUtils.hasText(value.getEmail());
+        boolean hasPhone = StringUtils.hasText(value.getPhone());
+        // toan tu XoR, email va phone cung rong hoac cung co gia tri thi tra ve false , //chi 1 trong 2 co value
+        return hasEmail ^ hasPhone;
     }
 }

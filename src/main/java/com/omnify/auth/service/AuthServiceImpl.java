@@ -99,13 +99,23 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        boolean emailTaken = request.getEmail() != null && userRepository.existsByEmail(request.getEmail());
-        boolean phoneTaken = request.getPhone() != null && userRepository.existsByPhone(request.getPhone());
+        Optional<User> existingByEmail = request.getEmail() != null
+            ? userRepository.findByEmail(request.getEmail())
+            : Optional.empty();
+        Optional<User> existingByPhone = request.getPhone() != null
+            ? userRepository.findByPhone(request.getPhone())
+            : Optional.empty();
 
-        if (emailTaken || phoneTaken) {
-            if (emailTaken) {
-                eventPublisher.publishEvent(new DuplicateRegistrationEvent(request.getEmail()));
-                throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        if (existingByEmail.isPresent()) {
+            if (existingByEmail.get().getStatus() == UserStatus.PENDING) {
+                throw new BusinessException(ErrorCode.ACCOUNT_PENDING_VERIFICATION);
+            }
+            eventPublisher.publishEvent(new DuplicateRegistrationEvent(request.getEmail()));
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        if (existingByPhone.isPresent()) {
+            if (existingByPhone.get().getStatus() == UserStatus.PENDING) {
+                throw new BusinessException(ErrorCode.ACCOUNT_PENDING_VERIFICATION);
             }
             throw new BusinessException(ErrorCode.PHONE_ALREADY_EXISTS);
         }
