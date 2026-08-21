@@ -40,6 +40,9 @@ public class RegisterRequest implements EmailOrPhoneCarrier {
     @Size(max=100, message = "Họ tên tối đa 100 kí tự")
     private String lastName;
 
+    @Schema(description = "Token captcha (reCAPTCHA v3) sinh ra ở FE", example ="03AGdBq27...")
+    private String captchaToken;
+
     public void setEmail(String email) {
         this.email = (email == null || email.isBlank()) ? null : email.trim();
     }

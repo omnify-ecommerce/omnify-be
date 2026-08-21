@@ -1,4 +1,5 @@
 package com.omnify.auth.infrastructure;
 
-public class CaptchaVerifier {
+public interface CaptchaVerifier {
+    boolean verify(String captchaToken);
 }

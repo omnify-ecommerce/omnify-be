@@ -97,6 +97,11 @@ omnify:
   mail:
     from-address: ${MAIL_FROM_ADDRESS}
     from-name: ${MAIL_FROM_NAME:Omnify}
+  captcha:
+    recaptcha:
+      secret-key: ${RECAPTCHA_SECRET_KEY:6Le8MZEtAAAAAPeR2XV272xq54cjW4ZuxBO85a83}
+      verify-url: https://www.google.com/recaptcha/api/siteverify
+      score-threshold: 0.5
   verification:
     email-token-ttl-minutes: 30
     phone-token-ttl-minutes: 5

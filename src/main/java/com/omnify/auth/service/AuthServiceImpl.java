@@ -2,6 +2,7 @@ package com.omnify.auth.service;
 
 import com.omnify.auth.domain.entity.LoginAttempt;
 import com.omnify.auth.domain.entity.RefreshToken;
+import com.omnify.auth.infrastructure.CaptchaVerifier;
 import com.omnify.user.domain.entity.User;
 import com.omnify.user.domain.entity.UserStatus;
 import com.omnify.auth.domain.entity.VerificationToken;
@@ -50,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final VerificationAttemptRecorder verificationAttemptRecorder;
     private final TokenHasher tokenHasher;
     private final DeviceInfoParser deviceInfoParser;
+    private final CaptchaVerifier captchaVerifier;
 
 
     private final int refreshTokenTtlDays;
@@ -77,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
                            ApplicationEventPublisher eventPublisher,
                            LoginSecurityRecorder loginSecurityRecorder,
                            VerificationAttemptRecorder verificationAttemptRecorder,
-                           TokenHasher tokenHasher, DeviceInfoParser deviceInfoParser,
+                           TokenHasher tokenHasher, DeviceInfoParser deviceInfoParser, CaptchaVerifier captchaVerifier,
                            @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
@@ -93,12 +95,16 @@ public class AuthServiceImpl implements AuthService {
         this.verificationAttemptRecorder = verificationAttemptRecorder;
         this.tokenHasher = tokenHasher;
         this.deviceInfoParser = deviceInfoParser;
+        this.captchaVerifier = captchaVerifier;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        if (request.getCaptchaToken() != null && !captchaVerifier.verify(request.getCaptchaToken())) {
+            throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
+        }
         Optional<User> existingByEmail = request.getEmail() != null
             ? userRepository.findByEmail(request.getEmail())
             : Optional.empty();

@@ -9,6 +9,7 @@ public enum ErrorCode {
     OTP_INVALID(HttpStatus.BAD_REQUEST, "Mã xác thực không đúng"),
     INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không hợp lệ"),
     NEW_PASSWORD_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "Mật khẩu mới trùng với mật khẩu hiện tại"),
+    CAPTCHA_FAILED(HttpStatus.BAD_REQUEST, "Xác thực captcha không thành công, vui lòng thử lại"),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được sử dụng"),
     PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng"),
     ACCOUNT_ALREADY_VERIFIED( HttpStatus.CONFLICT, "Tài khoản đã được xác thực"),
