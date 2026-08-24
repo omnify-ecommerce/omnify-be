@@ -65,6 +65,7 @@ public class GoogleRecaptchaV3Verifier implements CaptchaVerifier {
                 log.warn("Captcha score {} thap hon nguong quy dinh la {}", response.score(), scoreThreshold);
                 return false;
             }
+            log.info("Captcha verify thanh cong. Score dat duoc: {}", response.score());
             return true;
         } catch (Exception e) {
             log.error("Loi khi goi Google site verify", e);

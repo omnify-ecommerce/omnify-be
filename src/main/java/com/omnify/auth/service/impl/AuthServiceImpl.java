@@ -106,8 +106,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
 //        if (request.getCaptchaToken() != null && !captchaVerifier.verify(request.getCaptchaToken())) {
-//            throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
-//        } bo loc recaptcha se kick hoat sau khi hoan thien fe
+//            throw new BusinessException(ErrorCode.CAPTCHA_FAILED);}
+//        bo loc recaptcha se kick hoat sau khi hoan thien fe va them rate limit
 
         Optional<User> existingByEmail = request.getEmail() != null
             ? userRepository.findByEmail(request.getEmail())

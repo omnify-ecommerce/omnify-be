@@ -72,7 +72,8 @@ public class AuthController {
         @ApiResponse(
             responseCode = "409",
             description = "EMAIL_ALREADY_EXISTS - The email address is already in use. <br>" +
-                "PHONE_ALREADY_EXISTS - The phone number is already in use.",
+                "PHONE_ALREADY_EXISTS - The phone number is already in use. <br>" +
+                "ACCOUNT_PENDING_VERIFICATION - The account has been registered but not yet verified",
             content = @Content),
         @ApiResponse(
             responseCode = "429",
@@ -185,8 +186,14 @@ public class AuthController {
             )
         ),
         @ApiResponse(
-            responseCode = "403",
-            description = "REFRESH_TOKEN_INVALID - The refresh token is missing, invalid, or expired.",
+            responseCode = "400",
+            description = "VALIDATION_ERROR - Invalid input data.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "REFRESH_TOKEN_INVALID - The refresh token is missing, invalid, or expired.<br>" +
+                "INVALID_CREDENTIALS - Authentication is required to access this path",
             content = @Content
         ),
         @ApiResponse(
@@ -245,7 +252,8 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "429",
-            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.",
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later. <br>"+
+                "OTP_LOCKED - You have exceeded the maximum number of allowed attempts; please request a new code",
             content = @Content
         ),
         @ApiResponse(
@@ -295,13 +303,13 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "409",
-            description = "ACCOUNT_ALREADY_VERIFIED - The account has already been verified.<br>" +
-                "RESEND_COOLDOWN - Please wait before requesting another verification email.",
+            description = "ACCOUNT_ALREADY_VERIFIED - The account has already been verified",
             content = @Content
         ),
         @ApiResponse(
             responseCode = "429",
-            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.",
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.<br>" +
+                "RESEND_COOLDOWN - Please wait before requesting another verification email.",
             content = @Content
         ),
         @ApiResponse(
@@ -433,7 +441,8 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "429",
-            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.",
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later. <br>" +
+                "OTP_LOCKED - You have exceeded the maximum number of allowed attempts; please request a new code",
             content = @Content
         ),
         @ApiResponse(
@@ -483,13 +492,13 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "409",
-            description = "ACCOUNT_ALREADY_VERIFIED - The account has already been verified.<br>" +
-                "RESEND_COOLDOWN - Please wait before requesting another verification number SMS.",
+            description = "ACCOUNT_ALREADY_VERIFIED - The account has already been verified.",
             content = @Content
         ),
         @ApiResponse(
             responseCode = "429",
-            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.",
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later.<br>" +
+                "RESEND_COOLDOWN - Please wait before requesting another verification number SMS.",
             content = @Content
         ),
         @ApiResponse(

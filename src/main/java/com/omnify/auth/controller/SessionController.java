@@ -67,8 +67,13 @@ public class SessionController {
             )
         ),
         @ApiResponse(
-            responseCode = "403",
-            description = "REFRESH_TOKEN_INVALID - The token is missing or invalid/expired",
+            responseCode = "400",
+            description = "VALIDATION_ERROR - Invalid input data",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "INVALID_CREDENTIALS - Authentication is required to access this path.",
             content = @Content
         ),
         @ApiResponse(
@@ -108,8 +113,13 @@ public class SessionController {
             )
         ),
         @ApiResponse(
-            responseCode = "403",
-            description = "REFRESH_TOKEN_INVALID - The token is missing or invalid/expired.",
+            responseCode = "400",
+            description = "VALIDATION_ERROR - Invalid input data.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "INVALID_CREDENTIALS - Authentication is required to access this path.",
             content = @Content
         ),
         @ApiResponse(
@@ -157,6 +167,11 @@ public class SessionController {
         @ApiResponse(
             responseCode = "400",
             description = "VALIDATION_ERROR - The request data is invalid.",
+            content = @Content
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "INVALID_CREDENTIALS - Authentication is required to access this path.",
             content = @Content
         ),
         @ApiResponse(

@@ -99,7 +99,7 @@ omnify:
     from-name: ${MAIL_FROM_NAME:Omnify}
   captcha:
     recaptcha:
-      secret-key: ${RECAPTCHA_SECRET_KEY:6Le8MZEtAAAAAPeR2XV272xq54cjW4ZuxBO85a83}
+      secret-key: ${RECAPTCHA_SECRET_KEY}
       verify-url: https://www.google.com/recaptcha/api/siteverify
       score-threshold: 0.5
   verification:
