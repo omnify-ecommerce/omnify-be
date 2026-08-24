@@ -2,28 +2,23 @@ package com.omnify.auth.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
 
 @Schema(
-        name = "LogoutRequest",
-        description = "Yêu cầu đăng xuất một phiên đăng nhập cụ thể"
+    name = "LogoutRequest",
+    description = "Yêu cầu đăng xuất phiên đăng nhập hiện tại"
 )
+@Getter
+@Setter
 public class LogoutRequest {
 
-    @NotNull(message = "sessionId không được để trống")
+    @NotNull(message = "refresh token không được để trống")
     @Schema(
-            description = "ID của phiên đăng nhập cần đăng xuất",
-            example = "7314e147-1301-4e61-8988-3a543cad9608",
-            requiredMode = Schema.RequiredMode.REQUIRED
+        description = "Refresh token của phiên hiện tại cần đăng xuất",
+        example = "D4DaQHdH79qfbnoP8Lwf06ZNIINi7fYU-xE9YSu5gnc",
+        requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private UUID sessionId;
+    private String refreshToken;
 
-    public UUID getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
 }

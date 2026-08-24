@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Documented
 public @interface AtLeastOneContact {
 
-    String message() default "Phải cung cấp email hoặc số điện thoại";
+    String message() default "Chỉ được chọn 1 trong 2: email hoặc SDT";
 
     Class<?>[] groups() default {};
 

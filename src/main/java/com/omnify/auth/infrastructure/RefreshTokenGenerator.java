@@ -1,6 +1,6 @@
 package com.omnify.auth.infrastructure;
 
-import com.omnify.common.security.TokenHasher;
+import com.omnify.security.TokenHasher;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
@@ -16,13 +16,14 @@ public class RefreshTokenGenerator {
         this.tokenHasher = tokenHasher;
     }
 
-    /** Refresh token dài 256-bit, random, không đoán được. */
+    // Refresh token 256-bit, random
     public String generate() {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    //hash refresh token thông qua class tokenhasher
     public String hash(String rawValue) {
         return tokenHasher.hash(rawValue);
     }
