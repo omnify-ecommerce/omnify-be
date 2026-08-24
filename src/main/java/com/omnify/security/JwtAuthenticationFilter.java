@@ -1,8 +1,8 @@
 package com.omnify.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+
 /* Filter nay se chiu trach nghiem xac thuc JWT va thiet lap danh tinh cua user vào security context cho các bước phía
  sau sử dung. Class nayf chi xac dinh request dang la ai khong quyet dinh request nay co duoc truy cap hay khong
  ma thuc hien boi authentication chay sau de endpoint public van goi duoc binh thuong du khong co token */
@@ -30,8 +31,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+        HttpServletRequest request, HttpServletResponse response,
+        FilterChain filterChain
+    ) throws ServletException, IOException {
         //lay ra token cua request do va kiem tra
         String header = request.getHeader("Authorization");
 

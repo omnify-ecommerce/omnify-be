@@ -10,5 +10,6 @@ import java.util.UUID;
 public interface RoleAssignmentService {
 
     void assignRole(UUID userId, String roleName, UUID assignedBy);
+
     String getPrimaryRoleName(UUID userId);
 }

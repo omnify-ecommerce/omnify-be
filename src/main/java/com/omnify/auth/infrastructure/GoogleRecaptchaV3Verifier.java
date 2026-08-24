@@ -1,7 +1,6 @@
 package com.omnify.auth.infrastructure;
 
 
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
@@ -19,7 +18,7 @@ import java.util.List;
 @Component
 public class GoogleRecaptchaV3Verifier implements CaptchaVerifier {
     private static final Logger log = LoggerFactory.getLogger(GoogleRecaptchaV3Verifier.class);
-    private final RestClient restClient= RestClient.create();
+    private final RestClient restClient = RestClient.create();
     private final String secretKey;
     private final String verifyUrl;
     private final double scoreThreshold;
@@ -27,7 +26,8 @@ public class GoogleRecaptchaV3Verifier implements CaptchaVerifier {
     public GoogleRecaptchaV3Verifier(
         @Value("${omnify.captcha.recaptcha.secret-key}") String secretKey,
         @Value("${omnify.captcha.recaptcha.verify-url}") String verifyUrl,
-        @Value("${omnify.captcha.recaptcha.score-threshold}") double scoreThreshold) {
+        @Value("${omnify.captcha.recaptcha.score-threshold}") double scoreThreshold
+    ) {
         this.secretKey = secretKey;
         this.verifyUrl = verifyUrl;
         this.scoreThreshold = scoreThreshold;
@@ -35,40 +35,38 @@ public class GoogleRecaptchaV3Verifier implements CaptchaVerifier {
 
     @Override
     public boolean verify(String captchaToken) {
-        if (captchaToken == null || captchaToken.isBlank()){
+        if (captchaToken == null || captchaToken.isBlank()) {
             log.warn("Captcha token rong");
             return false;
         }
-        try{
+        try {
             //dung content type la application/x-www-form-urlencoded theo suggest cua docs siteverify cua google
             //content type dang application/x-www-form-urlencoded
             String body = "secret=" + URLEncoder.encode(secretKey, StandardCharsets.UTF_8)
-                + "&response=" + URLEncoder.encode(captchaToken,StandardCharsets.UTF_8);
-            SiteVerifyResponse response= restClient.post()
+                + "&response=" + URLEncoder.encode(captchaToken, StandardCharsets.UTF_8);
+            SiteVerifyResponse response = restClient.post()
                 .uri(verifyUrl)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(body)
                 .retrieve()
                 .body(SiteVerifyResponse.class);
 
-            if (response == null || !response.success()){
+            if (response == null || !response.success()) {
                 log.warn("Captcha verify that bai: {}", response);
                 return false;
             }
 
-            if (response.score()== null){
+            if (response.score() == null) {
                 log.warn("Captcha v3 response khong co score");
                 return false;
             }
 
-            if (response.score()< scoreThreshold){
-                log.warn("Captcha score {} thap hon nguong quy dinh la {}", response.score(),scoreThreshold);
+            if (response.score() < scoreThreshold) {
+                log.warn("Captcha score {} thap hon nguong quy dinh la {}", response.score(), scoreThreshold);
                 return false;
             }
-
             return true;
-
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Loi khi goi Google site verify", e);
             return false;
         }
@@ -80,6 +78,6 @@ public class GoogleRecaptchaV3Verifier implements CaptchaVerifier {
         Double score,
         String action,
         String hostName,
-        @JsonProperty("error-codes") List<String> errorCodes){
+        @JsonProperty("error-codes") List<String> errorCodes) {
     }
 }

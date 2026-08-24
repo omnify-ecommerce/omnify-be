@@ -15,7 +15,6 @@ public class VerificationTokenGenerator {
         this.tokenHasher = tokenHasher;
     }
 
-
     public String generateEmailToken() {
         int otp = 100000 + secureRandom.nextInt(900000);
         return String.valueOf(otp);
@@ -25,6 +24,7 @@ public class VerificationTokenGenerator {
         int otp = 100000 + secureRandom.nextInt(900000);
         return String.valueOf(otp);
     }
+
     // hash refresh token thông qua class tokenhasher
     public String hash(String rawValue) {
         return tokenHasher.hash(rawValue);

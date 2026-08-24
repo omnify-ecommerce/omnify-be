@@ -80,7 +80,8 @@ public class SessionController {
     @GetMapping
     public ResponseEntity<com.omnify.common.response.ApiResponse<List<SessionResponse>>> listSessions(
         @AuthenticationPrincipal AuthenticatedUser principal,
-        @RequestParam(required = false) UUID currentSessionId) {
+        @RequestParam(required = false) UUID currentSessionId
+    ) {
         List<SessionResponse> sessions = sessionService.listActiveSessions(principal.userId(), currentSessionId);
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(sessions, "Danh sách thiết bị đang đăng nhập"));
     }
@@ -126,7 +127,8 @@ public class SessionController {
     @DeleteMapping("/{sessionId}")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> revokeSession(
         @AuthenticationPrincipal AuthenticatedUser principal,
-        @PathVariable UUID sessionId) {
+        @PathVariable UUID sessionId
+    ) {
         sessionService.revokeSession(sessionId, principal.userId());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Đã đăng xuất khỏi thiết bị"));
     }
@@ -143,7 +145,7 @@ public class SessionController {
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
                         {
-                               "success": true,
+                              "success": true,
                                "message": "Đã đăng xuất khỏi tất cả thiết bị khác",
                                "data": null,
                                "errorCode": null,
@@ -171,7 +173,8 @@ public class SessionController {
     @PostMapping("/revoke-others")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> revokeOtherSessions(
         @AuthenticationPrincipal AuthenticatedUser principal,
-        @Valid @RequestBody RevokeOtherSessionsRequest request) {
+        @Valid @RequestBody RevokeOtherSessionsRequest request
+    ) {
         sessionService.revokeAllOtherSessions(principal.userId(), request.getCurrentSessionId());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Đã đăng xuất khỏi tất cả thiết bị khác"));
     }

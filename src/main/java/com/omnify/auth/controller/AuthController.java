@@ -49,16 +49,16 @@ public class AuthController {
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
                     {
-                      "success": true,
-                      "message": "Đăng ký thành công, vui lòng xác thực tài khoản",
-                      "data": {
-                        "userId": "eee5a030-6b88-4f84-9a07-51004e3398de",
-                        "status": "PENDING",
-                        "verificationChannel": "EMAIL_VERIFICATION",
-                        "assignedRole": "owner"
-                      },
-                      "errorCode": null,
-                      "timestamp": "2026-08-14T02:22:29.583117700Z"
+                        "success": true,
+                        "message": "Đăng ký thành công, vui lòng xác thực tài khoản",
+                        "data": {
+                            "userId": "eee5a030-6b88-4f84-9a07-51004e3398de",
+                            "status": "PENDING",
+                            "verificationChannel": "EMAIL_VERIFICATION",
+                            "assignedRole": "owner"
+                        },
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T02:22:29.583117700Z"
                     }
                     """)
             )
@@ -86,7 +86,8 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<com.omnify.common.response.ApiResponse<RegisterResponse>> register(
-        @Valid @RequestBody RegisterRequest request) {
+        @Valid @RequestBody RegisterRequest request
+    ) {
         RegisterResponse response = authService.register(request);
         return ResponseEntity
             .status(HttpStatus.CREATED)
@@ -105,20 +106,20 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                             "success": true,
-                             "message": "Đăng nhập thành công",
-                             "data": {
-                                 "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjOTlhNzVkMy1mNGMzLTQ0ZjQtYjZiNC1mMTFkYzlmN2RjZmIiLCJyb2xlIjoib3duZXIiLCJpYXQiOjE3ODY2NzYzMjQsImV4cCI6MTc4NjY3NzIyNH0.gXWVeqqjS-0_GkKYSirRHy2tZpDLCWHLOjlsCxO7ZvE",
-                                 "refreshToken": "JYwKTFdAb9rpC3uZSeB7Kj9k3AGVKw-MwfzOu0Eje00",
-                                 "sessionId": "72749537-0d67-4aa6-b6d3-7899288a8ebb",
-                                 "expiresIn": 900,
-                                 "userId": "c99a75d3-f4c3-44f4-b6b4-f11dc9f7dcfb",
-                                 "role": "owner"
-                             },
-                             "errorCode": null,
-                             "timestamp": "2026-08-14T02:58:44.682107Z"
-                        }
+                    {
+                        "success": true,
+                        "message": "Đăng nhập thành công",
+                        "data": {
+                            "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjOTlhNzVkMy1mNGMzLTQ0ZjQtYjZiNC1mMTFkYzlmN2RjZmIiLCJyb2xlIjoib3duZXIiLCJpYXQiOjE3ODY2NzYzMjQsImV4cCI6MTc4NjY3NzIyNH0.gXWVeqqjS-0_GkKYSirRHy2tZpDLCWHLOjlsCxO7ZvE",
+                            "refreshToken": "JYwKTFdAb9rpC3uZSeB7Kj9k3AGVKw-MwfzOu0Eje00",
+                            "sessionId": "72749537-0d67-4aa6-b6d3-7899288a8ebb",
+                            "expiresIn": 900,
+                            "userId": "c99a75d3-f4c3-44f4-b6b4-f11dc9f7dcfb",
+                            "role": "owner"
+                        },
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T02:58:44.682107Z"
+                    }
                     """)
             )
         ),
@@ -153,10 +154,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<com.omnify.common.response.ApiResponse<LoginResponse>> login(
         @Valid @RequestBody LoginRequest request,
-        HttpServletRequest httpRequest) {
+        HttpServletRequest httpRequest
+    ) {
         String ipAddress = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader("User-Agent");
-
         LoginResponse response = authService.login(request, ipAddress, userAgent);
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(response, "Đăng nhập thành công"));
     }
@@ -173,13 +174,13 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                            "success": true,
-                            "message": "Đăng xuất thành công",
-                            "data": null,
-                            "errorCode": null,
-                            "timestamp": "2026-08-14T03:16:58.385401Z"
-                        }
+                    {
+                        "success": true,
+                        "message": "Đăng xuất thành công",
+                        "data": null,
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T03:16:58.385401Z"
+                    }
                     """)
             )
         ),
@@ -197,7 +198,8 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> logout(
         @AuthenticationPrincipal AuthenticatedUser principal,
-        @Valid @RequestBody LogoutRequest request) {
+        @Valid @RequestBody LogoutRequest request
+    ) {
         authService.logout(request.getRefreshToken(), principal.userId());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Đăng xuất thành công"));
     }
@@ -213,19 +215,19 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                             "success": true,
-                             "message": "Xác thực tài khoản thành công",
-                             "data": null,
-                             "errorCode": null,
-                             "timestamp": "2026-08-14T03:21:38.025920Z"
-                         }
+                    {
+                        "success": true,
+                        "message": "Xác thực tài khoản thành công",
+                        "data": null,
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T03:21:38.025920Z"
+                    }
                     """)
             )
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "VALIDATION_ERROR - Email must be valid. Verification code must contain" +
+            description = "VALIDATION_ERROR - Email must be valid. Verification code must contain " +
                 "exactly 6 digits. Email and verification code cannot be empty. <br>" +
                 "TOKEN_EXPIRED - The verification token has expired.<br>" +
                 "OTP_INVALID - The verification code is incorrect.",
@@ -254,7 +256,8 @@ public class AuthController {
     })
     @PostMapping("/verify-email")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> verifyEmail(
-        @Valid @RequestBody VerifyEmailRequest request) {
+        @Valid @RequestBody VerifyEmailRequest request
+    ) {
         authService.verifyEmail(request.getEmail(), request.getOtpCode());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Xác thực tài khoản thành công"));
     }
@@ -270,13 +273,13 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                             "success": true,
-                             "message": "Email xác thực đã được gửi lại",
-                             "data": null,
-                             "errorCode": null,
-                             "timestamp": "2026-08-14T03:21:38.025920Z"
-                         }
+                    {
+                        "success": true,
+                        "message": "Email xác thực đã được gửi lại",
+                        "data": null,
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T03:21:38.025920Z"
+                    }
                     """)
             )
         ),
@@ -309,7 +312,8 @@ public class AuthController {
     })
     @PostMapping("/resend-verification")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> resendVerification(
-        @Valid @RequestBody ResendVerificationMailRequest request) {
+        @Valid @RequestBody ResendVerificationMailRequest request
+    ) {
         authService.resendVerificationEmail(request.getEmail());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Email xác thực đã được gửi lại"));
     }
@@ -325,20 +329,20 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                              "success": true,
-                              "message": "Làm mới token thành công",
-                              "data": {
-                                  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkY2ZiNDcwNi1kMTE0LTQ4YjItOTU5NS04MDM5ZGQxMThlOTUiLCJyb2xlIjoib3duZXIiLCJpYXQiOjE3ODY2NzgwMjMsImV4cCI6MTc4NjY3ODkyM30.vrPImUH22TgeeFDjxcKU3k6zSwlvyXVzhKCynsUrzWc",
-                                  "refreshToken": "e2TY7c7SLefyuvUgzQqM0G1O6IUF72JhcsADsBPLpK4",
-                                  "sessionId": "a6dd558a-389d-44ed-a8d1-c95206d2330b",
-                                  "expiresIn": 900,
-                                  "userId": "dcfb4706-d114-48b2-9595-8039dd118e95",
-                                  "role": "owner"
-                              },
-                              "errorCode": null,
-                              "timestamp": "2026-08-14T03:27:03.230033800Z"
-                          }
+                    {
+                        "success": true,
+                        "message": "Làm mới token thành công",
+                        "data": {
+                            "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkY2ZiNDcwNi1kMTE0LTQ4YjItOTU5NS04MDM5ZGQxMThlOTUiLCJyb2xlIjoib3duZXIiLCJpYXQiOjE3ODY2NzgwMjMsImV4cCI6MTc4NjY3ODkyM30.vrPImUH22TgeeFDjxcKU3k6zSwlvyXVzhKCynsUrzWc",
+                            "refreshToken": "e2TY7c7SLefyuvUgzQqM0G1O6IUF72JhcsADsBPLpK4",
+                            "sessionId": "a6dd558a-389d-44ed-a8d1-c95206d2330b",
+                            "expiresIn": 900,
+                            "userId": "dcfb4706-d114-48b2-9595-8039dd118e95",
+                            "role": "owner"
+                        },
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T03:27:03.230033800Z"
+                    }
                     """)
             )
         ),
@@ -349,7 +353,7 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "401",
-            description = "REFRESH_TOKEN_INVALID - The refresh token has expired or has been revoked" +
+            description = "REFRESH_TOKEN_INVALID - The refresh token has expired or has been revoked. " +
                 "Please log in again <br>" +
                 "REFRESH_TOKEN_EXPIRED - The refresh token has expired or has been revoked. Please log in again.<br>" +
                 "REFRESH_TOKEN_REUSE_DETECTED - Suspicious activity detected. All sessions have been" +
@@ -379,13 +383,15 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<com.omnify.common.response.ApiResponse<LoginResponse>> refresh(
         @Valid @RequestBody RefreshTokenRequest request,
-        HttpServletRequest httpRequest) {
+        HttpServletRequest httpRequest
+    ) {
         String ipAddress = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader("User-Agent");
 
         LoginResponse response = authService.refreshToken(request.getRefreshToken(), ipAddress, userAgent);
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(response, "Làm mới token thành công"));
     }
+
     @Operation(
         summary = "Verify phone",
         description = "Verify the user account using the phone SMS"
@@ -397,19 +403,19 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                             "success": true,
-                             "message": "Xác thực tài khoản qua SĐT thành công",
-                             "data": null,
-                             "errorCode": null,
-                             "timestamp": "2026-08-14T03:21:38.025920Z"
-                         }
+                    {
+                        "success": true,
+                        "message": "Xác thực tài khoản qua SĐT thành công",
+                        "data": null,
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T03:21:38.025920Z"
+                    }
                     """)
             )
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "VALIDATION_ERROR - SDT must be valid. Verification code must contain" +
+            description = "VALIDATION_ERROR - SDT must be valid. Verification code must contain " +
                 "exactly 6 digits. SDT and verification code cannot be empty. <br>" +
                 "TOKEN_EXPIRED - The verification token has expired.<br>" +
                 "OTP_INVALID - The verification code is incorrect.",
@@ -438,7 +444,8 @@ public class AuthController {
     })
     @PostMapping("/verify-phone")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> verifyPhone(
-        @Valid @RequestBody VerifyPhoneRequest request){
+        @Valid @RequestBody VerifyPhoneRequest request
+    ) {
         authService.verifyPhone(request.getPhone(), request.getOtpCode());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Xac thuc so dien thoai thanh cong"));
     }
@@ -454,13 +461,13 @@ public class AuthController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(value = """
-                        {
-                             "success": true,
-                             "message": "Mã SDT xác thực đã được gửi lại",
-                             "data": null,
-                             "errorCode": null,
-                             "timestamp": "2026-08-14T03:21:38.025920Z"
-                         }
+                    {
+                        "success": true,
+                        "message": "Mã SDT xác thực đã được gửi lại",
+                        "data": null,
+                        "errorCode": null,
+                        "timestamp": "2026-08-14T03:21:38.025920Z"
+                    }
                     """)
             )
         ),
@@ -493,7 +500,8 @@ public class AuthController {
     })
     @PostMapping("/resend-verification-phone")
     public ResponseEntity<com.omnify.common.response.ApiResponse<Void>> resendVerificationPhone(
-        @Valid @RequestBody ResendVerificationPhoneRequest request){
+        @Valid @RequestBody ResendVerificationPhoneRequest request
+    ) {
         authService.resendVerificationPhone(request.getPhone());
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(null, "Gui lai so xac thuc dien thoai thanh cong"));
     }

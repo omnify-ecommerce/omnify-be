@@ -1,9 +1,10 @@
-package com.omnify.rbac.service;
+package com.omnify.rbac.service.impl;
 
 import com.omnify.rbac.domain.entity.Role;
 import com.omnify.rbac.domain.entity.UserRole;
 import com.omnify.rbac.domain.repository.RoleRepository;
 import com.omnify.rbac.domain.repository.UserRoleRepository;
+import com.omnify.rbac.service.RoleAssignmentService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +27,11 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
     @Transactional(propagation = Propagation.MANDATORY) // bắt buộc gọi trong transaction có sẵn của caller (register)
     public void assignRole(UUID userId, String roleName, UUID assignedBy) {
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Role '" + roleName + "' chưa được seed trong DB "));
+            .orElseThrow(() -> new IllegalStateException(
+                "Role '" + roleName + "' chưa được seed trong DB "));
         userRoleRepository.save(UserRole.of(userId, role.getId(), assignedBy));
     }
+
     @Override
     public String getPrimaryRoleName(UUID userId) {
         List<String> roles = userRoleRepository.findRoleNamesByUserId(userId);

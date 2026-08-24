@@ -11,7 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+
 import java.io.IOException;
+
 /*Do dùng jwt để xác thực nên phải tắt cơ chế đăng nhập mặc định của Spring Security là HTTP Basic và Form Login
 nhưng như vậy sẽ phải cấu hình AuthenticationEntryPoint nếu gửi request chưa được xác thực nó sẽ trả 403 mặc định
 mà không ghi log nen class này được viết để xử lí trường hợp trên và trả đúng HTTP 401 Unauthorized và response
@@ -27,8 +29,10 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException authException) throws IOException {
+    public void commence(
+        HttpServletRequest request, HttpServletResponse response,
+        AuthenticationException authException
+    ) throws IOException {
         log.warn("Unauthenticated access attempt: method={}, uri={}, reason={}",
             request.getMethod(), request.getRequestURI(), authException.getMessage());
 

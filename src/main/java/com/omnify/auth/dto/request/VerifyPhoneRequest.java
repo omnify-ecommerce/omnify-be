@@ -1,7 +1,6 @@
 package com.omnify.auth.dto.request;
 
 import com.omnify.common.constant.RegexPattern;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -11,12 +10,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VerifyPhoneRequest {
-    @Schema(example = "0794264041" ,description = "SDT dung khi dang ky")
-    @NotBlank( message = "So dien thoai khong duoc de trong")
+    @Schema(example = "0794264041", description = "SDT dung khi dang ky")
+    @NotBlank(message = "So dien thoai khong duoc de trong")
     @Pattern(regexp = RegexPattern.PHONE_VN, message = "Số điện thoại không đúng định dạng")
     private String phone;
+
     @Schema(example = "123456", description = "Ma OTP 6 so gui toi SDT")
-    @NotBlank (message = "Ma xac thuc khong duoc de trong")
+    @NotBlank(message = "Ma xac thuc khong duoc de trong")
     @Pattern(regexp = "\\d{6}", message = "Ma xac thuc phai gom 6 chu so")
     private String otpCode;
 }

@@ -1,6 +1,5 @@
-package com.omnify.auth.service;
+package com.omnify.auth.service.recorder;
 
-import com.omnify.auth.domain.entity.VerificationToken;
 import com.omnify.auth.domain.repository.VerificationTokenRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;

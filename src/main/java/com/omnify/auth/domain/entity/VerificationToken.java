@@ -16,40 +16,25 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VerificationToken {
 
-    public enum Type {
-        EMAIL_VERIFICATION,
-        EMAIL_CHANGE,
-        PHONE_VERIFICATION,
-        PHONE_CHANGE,
-        PASSWORD_RESET
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-
     @Column(name = "user_id", nullable = false)
     private UUID userId;
-
     @Column(name = "token_hash", nullable = false)
     private String tokenHash;
-
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "type", columnDefinition = "verification_type")
     private Type type;
-
     @Column(name = "expires_at", nullable = false)
     private OffsetDateTime expiresAt;
-
     @Column(name = "used_at")
     private OffsetDateTime usedAt;
-
     // Đếm số lần nhập sai để chống brute-force OTP 6 số
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount = 0;
-
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
@@ -74,9 +59,19 @@ public class VerificationToken {
         this.usedAt = OffsetDateTime.now();
     }
 
-    /** Tăng số lần nhập sai. Trả về true nếu đã vượt ngưỡng cho phép. */
+    /**
+     * Tăng số lần nhập sai. Trả về true nếu đã vượt ngưỡng cho phép.
+     */
     public boolean registerFailedAttempt(int maxAttempts) {
         this.attemptCount++;
         return this.attemptCount >= maxAttempts;
+    }
+
+    public enum Type {
+        EMAIL_VERIFICATION,
+        EMAIL_CHANGE,
+        PHONE_VERIFICATION,
+        PHONE_CHANGE,
+        PASSWORD_RESET
     }
 }

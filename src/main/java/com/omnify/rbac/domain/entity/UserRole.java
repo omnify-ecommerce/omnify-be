@@ -1,6 +1,9 @@
 package com.omnify.rbac.domain.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -19,7 +22,6 @@ public class UserRole {
     private OffsetDateTime assignedAt;
 
     protected UserRole() {
-        // JPA
     }
 
     public static UserRole of(UUID userId, UUID roleId, UUID assignedBy) {

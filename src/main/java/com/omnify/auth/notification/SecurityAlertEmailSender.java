@@ -20,9 +20,11 @@ public class SecurityAlertEmailSender {
     private final RedissonClient redissonClient;
     private final long cooldownSeconds;
 
-    public SecurityAlertEmailSender(EmailService emailService,
-                                    RedissonClient redissonClient,
-                                    @Value("${omnify.verification.duplicate-registration-alert-cooldown-seconds}") long cooldownSeconds) {
+    public SecurityAlertEmailSender(
+        EmailService emailService,
+        RedissonClient redissonClient,
+        @Value("${omnify.verification.duplicate-registration-alert-cooldown-seconds}") long cooldownSeconds
+    ) {
         this.emailService = emailService;
         this.redissonClient = redissonClient;
         this.cooldownSeconds = cooldownSeconds;
@@ -46,16 +48,16 @@ public class SecurityAlertEmailSender {
     private String buildHtml(String fullName) {
         String greetingName = (fullName == null || fullName.isBlank()) ? "bạn" : fullName;
         return """
-                <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;">
-                    <h2>Xin chào %s,</h2>
-                    <p>Chúng tôi ghi nhận có người vừa cố đăng ký tài khoản Omnify mới bằng email này,
-                       trong khi email này đã có tài khoản.</p>
-                    <p>Nếu đó là bạn, hãy dùng chức năng <b>đăng nhập</b> hoặc <b>quên mật khẩu</b>
-                       thay vì đăng ký lại.</p>
-                    <p>Nếu không phải bạn, bạn không cần làm gì thêm — tài khoản của bạn vẫn an toàn.
-                       Tuy nhiên nếu lo ngại, bạn nên đổi mật khẩu để chắc chắn.</p>
-                </div>
-                """.formatted(greetingName);
+            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;">
+                <h2>Xin chào %s,</h2>
+                <p>Chúng tôi ghi nhận có người vừa cố đăng ký tài khoản Omnify mới bằng email này,
+                   trong khi email này đã có tài khoản.</p>
+                <p>Nếu đó là bạn, hãy dùng chức năng <b>đăng nhập</b> hoặc <b>quên mật khẩu</b>
+                   thay vì đăng ký lại.</p>
+                <p>Nếu không phải bạn, bạn không cần làm gì thêm — tài khoản của bạn vẫn an toàn.
+                   Tuy nhiên nếu lo ngại, bạn nên đổi mật khẩu để chắc chắn.</p>
+            </div>
+            """.formatted(greetingName);
     }
 
     private String maskEmail(String email) {

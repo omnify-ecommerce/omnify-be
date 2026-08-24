@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
 //Class nay de tao va gui html email thong qua SMTP
 @Service
 public class SmtpEmailService implements EmailService {
@@ -44,6 +45,7 @@ public class SmtpEmailService implements EmailService {
             log.error("Failed to send email to={} subject={}", maskEmail(toAddress), subject, ex);
         }
     }
+
     //log de debug nhung che mail lai de bao mat
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) return "***";

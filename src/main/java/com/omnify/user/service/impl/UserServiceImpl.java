@@ -1,10 +1,4 @@
-package com.omnify.user.service;
-
-import java.util.UUID;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+package com.omnify.user.service.impl;
 
 import com.omnify.auth.domain.entity.RefreshToken;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
@@ -12,8 +6,13 @@ import com.omnify.common.exception.BusinessException;
 import com.omnify.common.exception.ErrorCode;
 import com.omnify.user.domain.entity.User;
 import com.omnify.user.domain.repository.UserRepository;
-
+import com.omnify.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +26,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD);

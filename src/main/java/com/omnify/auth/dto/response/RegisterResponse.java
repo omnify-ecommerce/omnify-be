@@ -9,8 +9,8 @@ import java.util.UUID;
 @Getter
 @Builder
 @Schema(
-        name = "RegisterResponse",
-        description = "Thông tin trả về sau khi đăng ký tài khoản thành công"
+    name = "RegisterResponse",
+    description = "Thông tin trả về sau khi đăng ký tài khoản thành công"
 )
 public class RegisterResponse {
 

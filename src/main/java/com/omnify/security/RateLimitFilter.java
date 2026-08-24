@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+
 /*Rate limit request theo IP và từng nhóm endpoint (rule)
  chạy đầu tiên trong filter chain đã set bên security config , su dung redis rratelimiter của redissson */
 @Component
@@ -32,8 +33,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+        HttpServletRequest request, HttpServletResponse response,
+        FilterChain filterChain
+    ) throws ServletException, IOException {
         // Endpoint khong khop rule nao da set ben ratelimitproperties -> cho pass
         RateLimitProperties.Rule rule = properties.match(request.getRequestURI());
         if (rule == null) {
@@ -54,8 +57,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(ErrorCode.RATE_LIMIT_EXCEEDED.getHttpStatus().value());
             response.setContentType("application/json;charset=UTF-8");
             ApiResponse<Void> body = ApiResponse.error(
-                    ErrorCode.RATE_LIMIT_EXCEEDED.name(),
-                    ErrorCode.RATE_LIMIT_EXCEEDED.getDefaultMessage());
+                ErrorCode.RATE_LIMIT_EXCEEDED.name(),
+                ErrorCode.RATE_LIMIT_EXCEEDED.getDefaultMessage());
             response.getWriter().write(objectMapper.writeValueAsString(body));
             return;
         }

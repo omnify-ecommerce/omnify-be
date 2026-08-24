@@ -9,21 +9,21 @@ import java.util.UUID;
 @Getter
 @Builder
 @Schema(
-        name = "LoginResponse",
-        description = "Thông tin trả về sau khi đăng nhập thành công"
+    name = "LoginResponse",
+    description = "Thông tin trả về sau khi đăng nhập thành công"
 )
 public class LoginResponse {
 
     @Schema(description = "JWT Access Token dùng để xác thực các API",
-            example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+        example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private final String accessToken;
 
     @Schema(description = "Refresh Token dùng để lấy Access Token mới khi Access Token hết hạn",
-            example = "e5e5dfe7-4cb8-4ec6-8f33-5f7e8d5d7b2a")
+        example = "e5e5dfe7-4cb8-4ec6-8f33-5f7e8d5d7b2a")
     private final String refreshToken;
 
     @Schema(description = "ID của phiên đăng nhập hiện tại",
-            example = "550e8400-e29b-41d4-a716-446655440000")
+        example = "550e8400-e29b-41d4-a716-446655440000")
     private final UUID sessionId;
 
     @Schema(description = "Thời gian hết hạn của Access Token (đơn vị: giây)", example = "900")

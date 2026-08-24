@@ -33,10 +33,10 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name="first_name", nullable = false, length = 100)
+    @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 
-    @Column(name="last_name", nullable = false, length = 100)
+    @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
     @Column(name = "full_name", nullable = false)
@@ -84,18 +84,23 @@ public class User {
 
     @Builder
     private User(
-            String email,
-            String phone,
-            String passwordHash,
-            String firstName,
-            String lastName
+        String email,
+        String phone,
+        String passwordHash,
+        String firstName,
+        String lastName
     ) {
         this.email = email;
         this.phone = phone;
         this.passwordHash = passwordHash;
-        this.firstName= firstName;
+        this.firstName = firstName;
         this.lastName = lastName;
         this.fullName = composeFullName(lastName, firstName);
+    }
+
+    //dinh dang ten kieu vn ho truoc ten sau
+    private static String composeFullName(String lastName, String firstName) {
+        return (lastName + " " + firstName).trim();
     }
 
     public boolean isLocked() {
@@ -120,10 +125,5 @@ public class User {
 
     public void changePassword(String newPasswordHash) {
         this.passwordHash = newPasswordHash;
-    }
-
-    //dinh dang ten kieu vn ho truoc ten sau
-    private static String composeFullName( String lastName, String firstName){
-        return (lastName + " " + firstName).trim();
     }
 }

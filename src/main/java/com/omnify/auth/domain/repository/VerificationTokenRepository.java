@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, UUID> {
-    
+
     Optional<VerificationToken> findTopByUserIdAndTypeOrderByCreatedAtDesc(UUID userId, VerificationToken.Type type);
 
     @Modifying

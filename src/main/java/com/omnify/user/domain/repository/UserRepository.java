@@ -25,9 +25,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Modifying
     @Query("UPDATE User u SET " +
-            "u.failedLoginCount = u.failedLoginCount + 1, " +
-            "u.lastFailedLoginAt = CURRENT_TIMESTAMP " +
-            "WHERE u.id = :userId")
+        "u.failedLoginCount = u.failedLoginCount + 1, " +
+        "u.lastFailedLoginAt = CURRENT_TIMESTAMP " +
+        "WHERE u.id = :userId")
     void incrementFailedLoginCount(@Param("userId") UUID userId);
 
     @Query("SELECT u.failedLoginCount FROM User u WHERE u.id = :userId")

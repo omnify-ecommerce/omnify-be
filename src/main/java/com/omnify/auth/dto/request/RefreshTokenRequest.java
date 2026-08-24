@@ -13,7 +13,7 @@ public class RefreshTokenRequest {
 
     @NotBlank(message = "refreshToken không được để trống")
     @Schema(description = "Refresh token nhận được lúc đăng nhập",
-            example = "e2TY7c7SLefyuvUgzQqM0G1O6IUF72JhcsADsBPLpK4")
+        example = "e2TY7c7SLefyuvUgzQqM0G1O6IUF72JhcsADsBPLpK4")
     private String refreshToken;
 
 }

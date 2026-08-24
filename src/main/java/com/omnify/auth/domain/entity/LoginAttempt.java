@@ -16,45 +16,27 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LoginAttempt {
 
-    public enum FailureReason {
-        INVALID_CREDENTIALS,
-        ACCOUNT_NOT_FOUND,
-        ACCOUNT_LOCKED,
-        ACCOUNT_DISABLED,
-        EMAIL_NOT_VERIFIED,
-        PHONE_NOT_VERIFIED,
-        MFA_FAILED
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-
     @Column(name = "user_id")
     private UUID userId;
-
     @Column(name = "identifier", nullable = false)
     private String identifier;
-
     @Column(name = "success", nullable = false)
     private boolean success;
-
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "failure_reason", columnDefinition = "login_failure_reason")
     private FailureReason failureReason;
-
     @Column(name = "ip_address", columnDefinition = "INET", nullable = false)
     @JdbcTypeCode(SqlTypes.INET)
     private String ipAddress;
-
     @Column(name = "user_agent")
     private String userAgent;
-
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
-
 
     public static LoginAttempt success(UUID userId, String identifier, String ipAddress, String userAgent) {
         LoginAttempt attempt = new LoginAttempt();
@@ -66,9 +48,10 @@ public class LoginAttempt {
         return attempt;
     }
 
-    
-    public static LoginAttempt failure(UUID userId, String identifier, String ipAddress, String userAgent,
-                                       FailureReason failureReason) {
+    public static LoginAttempt failure(
+        UUID userId, String identifier, String ipAddress, String userAgent,
+        FailureReason failureReason
+    ) {
         LoginAttempt attempt = new LoginAttempt();
         attempt.userId = userId;
         attempt.identifier = identifier;
@@ -77,5 +60,16 @@ public class LoginAttempt {
         attempt.ipAddress = ipAddress;
         attempt.userAgent = userAgent;
         return attempt;
+    }
+
+
+    public enum FailureReason {
+        INVALID_CREDENTIALS,
+        ACCOUNT_NOT_FOUND,
+        ACCOUNT_LOCKED,
+        ACCOUNT_DISABLED,
+        EMAIL_NOT_VERIFIED,
+        PHONE_NOT_VERIFIED,
+        MFA_FAILED
     }
 }

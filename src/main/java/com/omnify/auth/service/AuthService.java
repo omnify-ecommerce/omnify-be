@@ -10,11 +10,18 @@ import java.util.UUID;
 public interface AuthService {
 
     RegisterResponse register(RegisterRequest request);
+
     LoginResponse login(LoginRequest request, String ipAddress, String userAgent);
+
     void verifyEmail(String email, String otpCode);
+
     void resendVerificationEmail(String email);
+
     LoginResponse refreshToken(String rawRefreshToken, String ipAddress, String userAgent);
+
     void logout(String rawRefreshToken, UUID userId);
-    void verifyPhone (String phone, String otpCode);
+
+    void verifyPhone(String phone, String otpCode);
+
     void resendVerificationPhone(String phone);
 }

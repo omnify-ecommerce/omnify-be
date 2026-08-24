@@ -2,9 +2,6 @@ package com.omnify.common.constant;
 
 public final class RegexPattern {
 
-    private RegexPattern() {
-    }
-
     public static final String EMAIL = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
     //  0xxxxxxxxx và +84xxxxxxxxx
@@ -12,4 +9,7 @@ public final class RegexPattern {
 
     // Tối thiểu 8 ký tự, có chữ hoa, chữ thường, số
     public static final String PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$";
+
+    private RegexPattern() {
+    }
 }

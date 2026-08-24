@@ -39,8 +39,8 @@ public class DeviceInfoParser {
     private String extractBrowser(Client client) {
         //neu khong xac dinh duoc browser hay client tra ve other thi tra ve null
         if (client.userAgent == null
-                || client.userAgent.family == null
-                || "Other".equals(client.userAgent.family)) {
+            || client.userAgent.family == null
+            || "Other".equals(client.userAgent.family)) {
             return null;
         }
         return client.userAgent.family;

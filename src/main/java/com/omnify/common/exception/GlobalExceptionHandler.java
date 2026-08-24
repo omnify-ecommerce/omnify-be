@@ -7,7 +7,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,8 +24,8 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ex.getErrorCode();
         log.warn("Business exception: {} - {}", errorCode.name(), ex.getMessage());
         return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(ApiResponse.error(errorCode.name(), ex.getMessage()));
+            .status(errorCode.getHttpStatus())
+            .body(ApiResponse.error(errorCode.name(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -36,8 +35,8 @@ public class GlobalExceptionHandler {
             .collect(Collectors.joining("; "));
         log.warn("Validation exception: {}", message);
         return ResponseEntity
-                .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
-                .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
+            .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
+            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -45,9 +44,10 @@ public class GlobalExceptionHandler {
         // Tuyến phòng thủ cuối cho race condition (2 request insert trùng email/phone gần như đồng thời)
         log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error("DUPLICATE_RESOURCE", "Dữ liệu đã tồn tại, vui lòng kiểm tra lại"));
+            .status(HttpStatus.CONFLICT)
+            .body(ApiResponse.error("DUPLICATE_RESOURCE", "Dữ liệu đã tồn tại, vui lòng kiểm tra lại"));
     }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Malformed request body: {}", ex.getMessage());
@@ -66,9 +66,11 @@ public class GlobalExceptionHandler {
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
             .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
     }
+
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(
-        org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        org.springframework.web.servlet.resource.NoResourceFoundException ex
+    ) {
         log.warn("No route matched: {}", ex.getResourcePath());
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
@@ -82,11 +84,12 @@ public class GlobalExceptionHandler {
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
             .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), "Tham số truyền vào không hợp lệ"));
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);
         return ResponseEntity
-                .status(ErrorCode.INTERNAL_ERROR.getHttpStatus())
-                .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.name(), ErrorCode.INTERNAL_ERROR.getDefaultMessage()));
+            .status(ErrorCode.INTERNAL_ERROR.getHttpStatus())
+            .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.name(), ErrorCode.INTERNAL_ERROR.getDefaultMessage()));
     }
 }

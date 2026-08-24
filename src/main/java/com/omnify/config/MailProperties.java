@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
 //class nay luu tru cac cau hinh lien quan den thong tin nguoi gui email cua ung dung
 //duoc bind tu bong qua pp.mail ben application.yml
 @Component

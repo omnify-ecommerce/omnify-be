@@ -27,25 +27,26 @@ public class RegisterRequest implements EmailOrPhoneCarrier {
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 8, max = 72, message = "Mật khẩu phải có độ dài từ 8 đến 72 ký tự")
     @Pattern(regexp = RegexPattern.PASSWORD,
-            message = "Mật khẩu tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số")
+        message = "Mật khẩu tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số")
     private String password;
 
-    @Schema( description = "Tên riêng của user", example = "Tu")
+    @Schema(description = "Tên riêng của user", example = "Tu")
     @NotBlank(message = "Tên riêng không được để trống")
-    @Size(max=100, message = "Tên riêng tối đa 100 kí tự")
+    @Size(max = 100, message = "Tên riêng tối đa 100 kí tự")
     private String firstName;
 
-    @Schema( description = "Họ tên của user", example = "Nguyen")
+    @Schema(description = "Họ tên của user", example = "Nguyen")
     @NotBlank(message = "Họ tên không được để trống")
-    @Size(max=100, message = "Họ tên tối đa 100 kí tự")
+    @Size(max = 100, message = "Họ tên tối đa 100 kí tự")
     private String lastName;
 
-    @Schema(description = "Token captcha (reCAPTCHA v3) sinh ra ở FE", example ="03AGdBq27...")
+    @Schema(description = "Token captcha (reCAPTCHA v3) sinh ra ở FE", example = "03AGdBq27...")
     private String captchaToken;
 
     public void setEmail(String email) {
         this.email = (email == null || email.isBlank()) ? null : email.trim();
     }
+
     public void setPhone(String phone) {
         this.phone = (phone == null || phone.isBlank()) ? null : phone.trim();
     }

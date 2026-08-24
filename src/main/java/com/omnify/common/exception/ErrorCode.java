@@ -12,7 +12,7 @@ public enum ErrorCode {
     CAPTCHA_FAILED(HttpStatus.BAD_REQUEST, "Xác thực captcha không thành công, vui lòng thử lại"),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được sử dụng"),
     PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng"),
-    ACCOUNT_ALREADY_VERIFIED( HttpStatus.CONFLICT, "Tài khoản đã được xác thực"),
+    ACCOUNT_ALREADY_VERIFIED(HttpStatus.CONFLICT, "Tài khoản đã được xác thực"),
     ACCOUNT_PENDING_VERIFICATION(HttpStatus.CONFLICT, "Tài khoản đã được đăng ký nhưng chưa xác thực, vui lòng xác thực tài khoản"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"),
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy phiên đăng nhập hoặc đã đăng xuất"),
@@ -23,7 +23,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Refresh token đã hết hạn hoặc đã bị thu hồi, vui lòng đăng nhập lại"),
     REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "Phát hiện dấu hiệu bất thường, tất cả thiết bị đã được đăng xuất vì lý do bảo mật"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau"),
-    RESEND_COOLDOWN( HttpStatus.TOO_MANY_REQUESTS, "Vui lòng đợi trước khi gửi lại email xác thực"),
+    RESEND_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, "Vui lòng đợi trước khi gửi lại email xác thực"),
     OTP_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Đã nhập sai quá số lần cho phép, vui lòng gửi lại mã mới"),
     RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau");
 
