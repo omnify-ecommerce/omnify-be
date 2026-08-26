@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface AuthService {
 
-    RegisterResponse register(RegisterRequest request);
+    RegisterResponse register(RegisterRequest request, String ipAddress);
 
     LoginResponse login(LoginRequest request, String ipAddress, String userAgent);
 

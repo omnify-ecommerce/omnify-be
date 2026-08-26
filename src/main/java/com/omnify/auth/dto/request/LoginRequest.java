@@ -38,6 +38,13 @@ public class LoginRequest implements EmailOrPhoneCarrier {
     )
     private String password;
 
+    @Schema(
+        description = "Token captcha (reCAPTCHA v3), bat buoc sau khi dang nhap sai qua so lan cho phep",
+        example = "03AGdBq27...",
+        nullable = true
+    )
+    private String captchaToken;
+
     public void setEmail(String email) {
         this.email = (email == null || email.isBlank()) ? null : email.trim();
     }
