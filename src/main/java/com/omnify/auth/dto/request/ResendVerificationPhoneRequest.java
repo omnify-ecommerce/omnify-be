@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ResendVerificationPhoneRequest {
-    @Schema(example = "0912345678", description = "Số điện thoại dùng khi đăng ký")
+    @Schema(example = "0912345678", description = "Phone number used during registration")
     @NotBlank(message = "Số điện thoại không được để trống")
     @Pattern(regexp = RegexPattern.PHONE_VN, message = "Số điện thoại không đúng định dạng")
     private String phone;

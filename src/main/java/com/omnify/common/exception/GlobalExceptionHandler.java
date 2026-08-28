@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
         log.warn("Business exception: {} - {}", errorCode.name(), ex.getMessage());
         return ResponseEntity
             .status(errorCode.getHttpStatus())
-            .body(ApiResponse.error(errorCode.name(), ex.getMessage()));
+            .body(ApiResponse.error(ex.getMessage(), errorCode.name()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
         log.warn("Validation exception: {}", message);
         return ResponseEntity
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
-            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
+            .body(ApiResponse.error(message, ErrorCode.VALIDATION_ERROR.name()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
         log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
         return ResponseEntity
             .status(HttpStatus.CONFLICT)
-            .body(ApiResponse.error("DUPLICATE_RESOURCE", "Dữ liệu đã tồn tại, vui lòng kiểm tra lại"));
+            .body(ApiResponse.error("Dữ liệu đã tồn tại, vui lòng kiểm tra lại", "DUPLICATE_RESOURCE"));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
         log.warn("Malformed request body: {}", ex.getMessage());
         return ResponseEntity
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
-            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), "Dữ liệu đầu vào không hợp lệ"));
+            .body(ApiResponse.error("Dữ liệu đầu vào không hợp lệ", ErrorCode.VALIDATION_ERROR.name()));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
         String message = String.format("Tham số '%s' không đúng định dạng", ex.getName());
         return ResponseEntity
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
-            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), message));
+            .body(ApiResponse.error(message, ErrorCode.VALIDATION_ERROR.name()));
     }
 
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
@@ -74,7 +74,7 @@ public class GlobalExceptionHandler {
         log.warn("No route matched: {}", ex.getResourcePath());
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
-            .body(ApiResponse.error("SESSION_NOT_FOUND", "Đường dẫn không hợp lệ"));
+            .body(ApiResponse.error("Đường dẫn không hợp lệ", "SESSION_NOT_FOUND"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
         log.warn("Illegal argument: {}", ex.getMessage());
         return ResponseEntity
             .status(ErrorCode.VALIDATION_ERROR.getHttpStatus())
-            .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.name(), "Tham số truyền vào không hợp lệ"));
+            .body(ApiResponse.error("Tham số truyền vào không hợp lệ", ErrorCode.VALIDATION_ERROR.name()));
     }
 
     @ExceptionHandler(Exception.class)
@@ -90,6 +90,6 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception", ex);
         return ResponseEntity
             .status(ErrorCode.INTERNAL_ERROR.getHttpStatus())
-            .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.name(), ErrorCode.INTERNAL_ERROR.getDefaultMessage()));
+            .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.getDefaultMessage(), ErrorCode.INTERNAL_ERROR.name()));
     }
 }

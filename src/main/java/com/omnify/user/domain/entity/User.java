@@ -1,110 +1,74 @@
 package com.omnify.user.domain.entity;
 
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import java.time.Instant;
+import java.util.UUID;
+
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.type.SqlTypes;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import com.omnify.common.entity.AuditableEntity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.OptimisticLock;
 
 @Entity
 @Table(name = "users")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SoftDelete(columnName = "is_deleted")
+public class User extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "email", columnDefinition = "citext")
+    @Column(columnDefinition = "citext")
     private String email;
 
-    @Column(name = "phone")
+    @Column(length = 20)
     private String phone;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "first_name", nullable = false, length = 100)
-    private String firstName;
-
-    @Column(name = "last_name", nullable = false, length = 100)
-    private String lastName;
-
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
-
-    @Column(name = "locale")
-    private String locale = "vi-VN";
-
-    @Column(name = "timezone")
-    private String timezone = "Asia/Ho_Chi_Minh";
-
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", nullable = false, columnDefinition = "user_status")
+    @Column(nullable = false)
     private UserStatus status = UserStatus.PENDING;
 
+    @Builder.Default
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
 
+    @Builder.Default
     @Column(name = "phone_verified", nullable = false)
     private boolean phoneVerified = false;
 
+    @Builder.Default
+    @OptimisticLock(excluded = true)
     @Column(name = "failed_login_count", nullable = false)
-    private int failedLoginCount = 0;
+    private Integer failedLoginCount = 0;
 
     @Column(name = "last_failed_login_at")
-    private OffsetDateTime lastFailedLoginAt;
+    @OptimisticLock(excluded = true)
+    private Instant lastFailedLoginAt;
 
     @Column(name = "locked_until")
-    private OffsetDateTime lockedUntil;
+    @OptimisticLock(excluded = true)
+    private Instant lockedUntil;
 
     @Column(name = "last_login_at")
-    private OffsetDateTime lastLoginAt;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
-
-    @Column(name = "deleted_at")
-    private OffsetDateTime deletedAt;
-
-    @Builder
-    private User(
-        String email,
-        String phone,
-        String passwordHash,
-        String firstName,
-        String lastName
-    ) {
-        this.email = email;
-        this.phone = phone;
-        this.passwordHash = passwordHash;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.fullName = composeFullName(lastName, firstName);
-    }
-
-    //dinh dang ten kieu vn ho truoc ten sau
-    private static String composeFullName(String lastName, String firstName) {
-        return (lastName + " " + firstName).trim();
-    }
+    @OptimisticLock(excluded = true)
+    private Instant lastLoginAt;
 
     public boolean isLocked() {
-        return lockedUntil != null && lockedUntil.isAfter(OffsetDateTime.now());
+        return lockedUntil != null && lockedUntil.isAfter(Instant.now());
     }
 
     public void markEmailVerified() {
@@ -120,7 +84,7 @@ public class User {
     public void registerSuccessfulLogin() {
         this.failedLoginCount = 0;
         this.lockedUntil = null;
-        this.lastLoginAt = OffsetDateTime.now();
+        this.lastLoginAt = Instant.now();
     }
 
     public void changePassword(String newPasswordHash) {

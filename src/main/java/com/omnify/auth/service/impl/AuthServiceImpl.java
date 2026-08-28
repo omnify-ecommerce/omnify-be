@@ -22,8 +22,10 @@ import com.omnify.rbac.service.RoleAssignmentService;
 import com.omnify.security.JwtTokenProvider;
 import com.omnify.security.TokenHasher;
 import com.omnify.user.domain.entity.User;
+import com.omnify.user.domain.entity.UserProfile;
 import com.omnify.user.domain.entity.UserStatus;
 import com.omnify.user.domain.repository.UserRepository;
+import com.omnify.user.domain.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private static final String CAPTCHA_SCOPE_REGISTER = "register";
     private static final String CAPTCHA_SCOPE_LOGIN = "login";
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptRepository loginAttemptRepository;
@@ -67,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
     private int emailTokenTtlMinutes;
 
     public AuthServiceImpl(
-        UserRepository userRepository,
+        UserRepository userRepository, UserProfileRepository userProfileRepository,
         VerificationTokenRepository verificationTokenRepository,
         RefreshTokenRepository refreshTokenRepository,
         LoginAttemptRepository loginAttemptRepository,
@@ -85,6 +88,7 @@ public class AuthServiceImpl implements AuthService {
         @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays
     ) {
         this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.loginAttemptRepository = loginAttemptRepository;
@@ -147,10 +151,16 @@ public class AuthServiceImpl implements AuthService {
             .email(request.getEmail())
             .phone(request.getPhone())
             .passwordHash(passwordHash)
+            .build();
+        user = userRepository.save(user);
+
+        UserProfile profile= UserProfile.builder()
+            .userId(user.getId())
+            .user(user)
             .firstName(request.getFirstName())
             .lastName(request.getLastName())
             .build();
-        user = userRepository.save(user);
+        userProfileRepository.save(profile);
 
         roleAssignmentService.assignRole(user.getId(), OWNER_ROLE, null);
 
@@ -175,7 +185,7 @@ public class AuthServiceImpl implements AuthService {
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
             user.getId(),
-            user.getFullName(),
+            profile.getFirstName() + " " + profile.getLastName(),
             user.getEmail(),
             user.getPhone(),
             rawToken,
@@ -311,6 +321,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
         }
 
+        UserProfile profile = userProfileRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Optional<VerificationToken> lastToken = verificationTokenRepository
             .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION);
 
@@ -336,7 +349,7 @@ public class AuthServiceImpl implements AuthService {
         verificationTokenRepository.save(newToken);
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
-            user.getId(), user.getFullName(), user.getEmail(), user.getPhone(),
+            user.getId(), profile.getFirstName() + " " + profile.getLastName(), user.getEmail(), user.getPhone(),
             rawOtp, VerificationToken.Type.EMAIL_VERIFICATION
         ));
     }
@@ -458,6 +471,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_ALREADY_VERIFIED);
         }
 
+        UserProfile profile = userProfileRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Optional<VerificationToken> lastToken = verificationTokenRepository
             .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.PHONE_VERIFICATION);
 
@@ -484,7 +500,7 @@ public class AuthServiceImpl implements AuthService {
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
             user.getId(),
-            user.getFullName(),
+            profile.getFirstName() + " " + profile.getLastName(),
             user.getEmail(),
             user.getPhone(),
             rawOtp,

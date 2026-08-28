@@ -8,11 +8,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Schema(name = "RefreshTokenRequest", description = "Request làm mới access token")
+@Schema(name = "RefreshTokenRequest", description = "Request to refresh the access token")
 public class RefreshTokenRequest {
 
     @NotBlank(message = "refreshToken không được để trống")
-    @Schema(description = "Refresh token nhận được lúc đăng nhập",
+    @Schema(description = "Refresh token received at login",
         example = "e2TY7c7SLefyuvUgzQqM0G1O6IUF72JhcsADsBPLpK4")
     private String refreshToken;
 

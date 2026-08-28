@@ -10,21 +10,21 @@ import lombok.Setter;
 @AtLeastOneContact
 @Schema(
     name = "LoginRequest",
-    description = "Thông tin đăng nhập bằng email hoặc số điện thoại"
+    description = "Login information using email or phone number"
 )
 @Getter
 @Setter
 public class LoginRequest implements EmailOrPhoneCarrier {
 
     @Schema(
-        description = "Email đăng nhập. Bắt buộc nếu không truyền số điện thoại.",
+        description = "Login email. Required if phone number is not provided.",
         example = "user@example.com",
         nullable = true
     )
     private String email;
 
     @Schema(
-        description = "Số điện thoại đăng nhập. Bắt buộc nếu không truyền email.",
+        description = "Login phone number. Required if email is not provided.",
         example = "0912345678",
         nullable = true
     )
@@ -32,14 +32,14 @@ public class LoginRequest implements EmailOrPhoneCarrier {
 
     @NotBlank(message = "Mật khẩu không được để trống")
     @Schema(
-        description = "Mật khẩu tài khoản",
+        description = "Account password",
         example = "P@ssw0rd123",
         requiredMode = Schema.RequiredMode.REQUIRED
     )
     private String password;
 
     @Schema(
-        description = "Token captcha (reCAPTCHA v3), bat buoc sau khi dang nhap sai qua so lan cho phep",
+        description = "Captcha token (reCAPTCHA v3), required after exceeding the allowed number of failed login attempts",
         example = "03AGdBq27...",
         nullable = true
     )

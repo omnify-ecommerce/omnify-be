@@ -59,8 +59,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(ErrorCode.RATE_LIMIT_EXCEEDED.getHttpStatus().value());
             response.setContentType("application/json;charset=UTF-8");
             ApiResponse<Void> body = ApiResponse.error(
-                ErrorCode.RATE_LIMIT_EXCEEDED.name(),
-                ErrorCode.RATE_LIMIT_EXCEEDED.getDefaultMessage());
+                ErrorCode.RATE_LIMIT_EXCEEDED.getDefaultMessage(),
+                ErrorCode.RATE_LIMIT_EXCEEDED.name()
+                );
             response.getWriter().write(objectMapper.writeValueAsString(body));
             return;
         }
