@@ -30,7 +30,7 @@ public class SmtpEmailService implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
             //thiet lap nguoi gui
-            helper.setFrom(mailProperties.getFromAddress(), mailProperties.getFromName());
+            helper.setFrom(mailProperties.fromAddress(), mailProperties.fromName());
             //nguoi nhan
             helper.setTo(toAddress);
             //chu de mail da config ben class verificationemailsender

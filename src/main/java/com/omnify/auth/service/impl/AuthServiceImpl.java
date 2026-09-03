@@ -16,6 +16,7 @@ import com.omnify.auth.notification.UserRegisteredEvent;
 import com.omnify.auth.service.AuthService;
 import com.omnify.auth.service.recorder.LoginSecurityRecorder;
 import com.omnify.auth.service.recorder.VerificationAttemptRecorder;
+import com.omnify.common.constant.SystemUser;
 import com.omnify.common.exception.BusinessException;
 import com.omnify.common.exception.ErrorCode;
 import com.omnify.rbac.service.RoleAssignmentService;
@@ -162,7 +163,7 @@ public class AuthServiceImpl implements AuthService {
             .build();
         userProfileRepository.save(profile);
 
-        roleAssignmentService.assignRole(user.getId(), OWNER_ROLE, null);
+        roleAssignmentService.assignRole(user.getId(), OWNER_ROLE, SystemUser.ID);
 
         boolean useEmailChannel = request.getEmail() != null;
         VerificationToken.Type tokenType = useEmailChannel
@@ -217,7 +218,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmailOrPhone(identifier).orElse(null);
 
-        if (user == null) {
+        if (user == null || user.isSystem()) {
             loginSecurityRecorder.recordUnknownIdentifierAttempt(identifier, ipAddress, userAgent);
             captchaGate.recordFailure(CAPTCHA_SCOPE_LOGIN, ipAddress);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);

@@ -8,16 +8,19 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.omnify.common.constant.SystemUser;
+
 public class SecurityAuditorAware implements AuditorAware<UUID> {
 
     @Override
     public Optional<UUID> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        // Khong co ai dang nhap (vi du: tu dang ky tai khoan) => hanh dong nay do he thong tu thuc hien
         if (authentication == null
             || !authentication.isAuthenticated()
             || authentication instanceof AnonymousAuthenticationToken) {
-            return Optional.empty();
+            return Optional.of(SystemUser.ID);
         }
 
         Object principal = authentication.getPrincipal();

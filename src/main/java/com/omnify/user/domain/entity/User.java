@@ -67,6 +67,10 @@ public class User extends AuditableEntity {
     @OptimisticLock(excluded = true)
     private Instant lastLoginAt;
 
+    @Builder.Default
+    @Column(name = "is_system", nullable = false)
+    private boolean isSystem = false;
+
     public boolean isLocked() {
         return lockedUntil != null && lockedUntil.isAfter(Instant.now());
     }
