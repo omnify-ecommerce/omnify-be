@@ -1,5 +1,6 @@
 package com.omnify.auth.dto.request;
 
+import com.omnify.auth.infrastructure.CaptchaCarrier;
 import com.omnify.common.constant.RegexPattern;
 import com.omnify.common.validation.AtLeastOneContact;
 import com.omnify.common.validation.EmailOrPhoneCarrier;
@@ -13,7 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AtLeastOneContact
-public class RegisterRequest implements EmailOrPhoneCarrier {
+public class RegisterRequest implements EmailOrPhoneCarrier, CaptchaCarrier {
 
     @Schema(description = "Registration email", example = "user123@gmail.com", requiredMode = Schema.RequiredMode.REQUIRED)
     @Pattern(regexp = RegexPattern.EMAIL, message = "Email không đúng định dạng")
@@ -41,7 +42,15 @@ public class RegisterRequest implements EmailOrPhoneCarrier {
     private String lastName;
 
     @Schema(description = "Captcha token (reCAPTCHA v3) generated on the FE", example = "03AGdBq27...")
-    private String captchaToken;
+    private String captchaTokenV3;
+
+    @Schema(
+        description = "Captcha token (reCAPTCHA v2). Send this alone (captchaTokenV3 not required) after " +
+            "the response returns CAPTCHA_STEP_UP_REQUIRED (v3 score too low)",
+        example = "03AGdBq27...",
+        nullable = true
+    )
+    private String captchaTokenV2;
 
     public void setEmail(String email) {
         this.email = (email == null || email.isBlank()) ? null : email.trim();

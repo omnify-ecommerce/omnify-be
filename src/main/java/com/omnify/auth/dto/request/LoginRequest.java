@@ -1,5 +1,6 @@
 package com.omnify.auth.dto.request;
 
+import com.omnify.auth.infrastructure.CaptchaCarrier;
 import com.omnify.common.validation.AtLeastOneContact;
 import com.omnify.common.validation.EmailOrPhoneCarrier;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +15,7 @@ import lombok.Setter;
 )
 @Getter
 @Setter
-public class LoginRequest implements EmailOrPhoneCarrier {
+public class LoginRequest implements EmailOrPhoneCarrier, CaptchaCarrier {
 
     @Schema(
         description = "Login email. Required if phone number is not provided.",
@@ -43,7 +44,15 @@ public class LoginRequest implements EmailOrPhoneCarrier {
         example = "03AGdBq27...",
         nullable = true
     )
-    private String captchaToken;
+    private String captchaTokenV3;
+
+    @Schema(
+        description = "Captcha token (reCAPTCHA v2). Send this alone (captchaTokenV3 not required) after " +
+            "the response returns CAPTCHA_STEP_UP_REQUIRED (v3 score too low)",
+        example = "03AGdBq27...",
+        nullable = true
+    )
+    private String captchaTokenV2;
 
     public void setEmail(String email) {
         this.email = (email == null || email.isBlank()) ? null : email.trim();

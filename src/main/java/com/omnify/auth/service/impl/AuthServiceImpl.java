@@ -27,6 +27,7 @@ import com.omnify.user.domain.entity.UserProfile;
 import com.omnify.user.domain.entity.UserStatus;
 import com.omnify.user.domain.repository.UserRepository;
 import com.omnify.user.domain.repository.UserProfileRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,7 +59,8 @@ public class AuthServiceImpl implements AuthService {
     private final VerificationAttemptRecorder verificationAttemptRecorder;
     private final TokenHasher tokenHasher;
     private final DeviceInfoParser deviceInfoParser;
-    private final CaptchaVerifier captchaVerifier;
+    private final CaptchaVerifier recaptchaV3Verifier;
+    private final CaptchaVerifier recaptchaV2Verifier;
     private final CaptchaGate captchaGate;
     private final int refreshTokenTtlDays;
     @Value("${omnify.verification.phone-token-ttl-minutes}")
@@ -85,7 +87,9 @@ public class AuthServiceImpl implements AuthService {
         VerificationAttemptRecorder verificationAttemptRecorder,
         TokenHasher tokenHasher,
         DeviceInfoParser deviceInfoParser,
-        CaptchaVerifier captchaVerifier, CaptchaGate captchaGate,
+        @Qualifier("recaptchaV3Verifier") CaptchaVerifier recaptchaV3Verifier,
+        @Qualifier("recaptchaV2Verifier") CaptchaVerifier recaptchaV2Verifier,
+        CaptchaGate captchaGate,
         @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays
     ) {
         this.userRepository = userRepository;
@@ -103,22 +107,46 @@ public class AuthServiceImpl implements AuthService {
         this.verificationAttemptRecorder = verificationAttemptRecorder;
         this.tokenHasher = tokenHasher;
         this.deviceInfoParser = deviceInfoParser;
-        this.captchaVerifier = captchaVerifier;
+        this.recaptchaV3Verifier = recaptchaV3Verifier;
+        this.recaptchaV2Verifier = recaptchaV2Verifier;
         this.captchaGate = captchaGate;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
+    }
+
+    //Xac thuc captcha v3, neu score thap hon nguong thi step-up sang v2 thay vi chan cung
+    //neu step up sang v2 thi ko can gui lai token v3
+    private void verifyCaptchaIfRequired(String scope, String ipAddress, CaptchaCarrier request) {
+        if (!captchaGate.isCaptchaRequired(scope, ipAddress)) {
+            return;
+        }
+
+        if (request.getCaptchaTokenV2() != null) {
+            if (recaptchaV2Verifier.verify(request.getCaptchaTokenV2()) != CaptchaResult.PASSED) {
+                throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
+            }
+            return;
+        }
+
+        if (request.getCaptchaTokenV3() == null) {
+            throw new BusinessException(ErrorCode.CAPTCHA_REQUIRED);
+        }
+
+        CaptchaResult v3Result = recaptchaV3Verifier.verify(request.getCaptchaTokenV3());
+        if (v3Result == CaptchaResult.PASSED) {
+            return;
+        }
+        if (v3Result == CaptchaResult.FAILED) {
+            throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
+        }
+
+        // LOW_SCORE: yeu cau client step-up sang v2, khong giu lai token v3 vi da bi Google invalidate sau lan verify nay
+        throw new BusinessException(ErrorCode.CAPTCHA_STEP_UP_REQUIRED);
     }
 
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest request, String ipAddress) {
-        if (captchaGate.isCaptchaRequired(CAPTCHA_SCOPE_REGISTER, ipAddress)){
-            if (request.getCaptchaToken() == null){
-                throw new BusinessException(ErrorCode.CAPTCHA_REQUIRED);
-            }
-            if (!captchaVerifier.verify(request.getCaptchaToken())){
-                throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
-            }
-        }
+        verifyCaptchaIfRequired(CAPTCHA_SCOPE_REGISTER, ipAddress, request);
 
         Optional<User> existingByEmail = request.getEmail() != null
             ? userRepository.findByEmail(request.getEmail())
@@ -205,14 +233,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        if (captchaGate.isCaptchaRequired(CAPTCHA_SCOPE_LOGIN, ipAddress)){
-            if (request.getCaptchaToken() == null){
-                throw new BusinessException(ErrorCode.CAPTCHA_REQUIRED);
-            }
-            if (!captchaVerifier.verify(request.getCaptchaToken())){
-                throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
-            }
-        }
+        verifyCaptchaIfRequired(CAPTCHA_SCOPE_LOGIN, ipAddress, request);
 
         String identifier = request.getEmail() != null ? request.getEmail() : request.getPhone();
 

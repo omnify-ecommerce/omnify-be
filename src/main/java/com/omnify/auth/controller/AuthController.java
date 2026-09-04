@@ -71,8 +71,10 @@ public class AuthController {
             description = "VALIDATION_ERROR - Password must be at least 8 characters" +
                 " and contain uppercase, lowercase, and numeric characters. " +
                 "Email, phone number, first name, and last name must be valid and cannot be empty. <br>" +
-                "CAPTCHA_REQUIRED - Too many failed attempts from this IP, a captchaToken is now required. <br>" +
-                "CAPTCHA_FAILED - The provided captchaToken is invalid.",
+                "CAPTCHA_REQUIRED - Too many failed attempts from this IP, a captchaTokenV3 is now required. <br>" +
+                "CAPTCHA_STEP_UP_REQUIRED - The v3 captcha score is too low, resubmit with only captchaTokenV2 " +
+                "(reCAPTCHA v2 challenge, the v3 token is single-use and no longer needed). <br>" +
+                "CAPTCHA_FAILED - The provided captchaTokenV3/captchaTokenV2 is invalid.",
             content = @Content),
         @ApiResponse(
             responseCode = "409",
@@ -134,8 +136,10 @@ public class AuthController {
         @ApiResponse(
             responseCode = "400",
             description = "VALIDATION_ERROR - Username/email/phone and password cannot be empty. <br>" +
-                "CAPTCHA_REQUIRED - Too many failed attempts from this IP, a captchaToken is now required. <br>" +
-                "CAPTCHA_FAILED - The provided captchaToken is invalid.",
+                "CAPTCHA_REQUIRED - Too many failed attempts from this IP, a captchaTokenV3 is now required. <br>" +
+                "CAPTCHA_STEP_UP_REQUIRED - The v3 captcha score is too low, resubmit with only captchaTokenV2 " +
+                "(reCAPTCHA v2 challenge, the v3 token is single-use and no longer needed). <br>" +
+                "CAPTCHA_FAILED - The provided captchaTokenV3/captchaTokenV2 is invalid.",
             content = @Content
         ),
         @ApiResponse(

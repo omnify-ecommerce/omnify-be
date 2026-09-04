@@ -71,11 +71,11 @@ omnify:
       rules:
         login:
           path: /api/v1/auth/login
-          capacity: 5
+          capacity: 50
           refresh-period-seconds: 60
         register:
           path: /api/v1/auth/register
-          capacity: 3
+          capacity: 30
           refresh-period-seconds: 60
         resend-verification:
           path: /api/v1/auth/resend-verification
@@ -104,7 +104,8 @@ omnify:
     recaptcha:
       secret-key: ${RECAPTCHA_SECRET_KEY}
       verify-url: https://www.google.com/recaptcha/api/siteverify
-      score-threshold: 0.5
+      score-threshold: 0.95
+      v2-secret-key: ${RECAPTCHA_V2_SECRET_KEY}
   verification:
     email-token-ttl-minutes: 30
     phone-token-ttl-minutes: 5
