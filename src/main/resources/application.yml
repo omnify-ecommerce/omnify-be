@@ -64,6 +64,9 @@ omnify:
       refresh-token-ttl-days: 30
       lockout:
         schedule-seconds: [0,0,0,30,60,120,300,600]
+      captcha-gate:
+        threshold: 3
+        window-seconds: 900
     rate-limit:
       rules:
         login:

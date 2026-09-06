@@ -10,10 +10,7 @@ import com.omnify.auth.dto.request.LoginRequest;
 import com.omnify.auth.dto.request.RegisterRequest;
 import com.omnify.auth.dto.response.LoginResponse;
 import com.omnify.auth.dto.response.RegisterResponse;
-import com.omnify.auth.infrastructure.CaptchaVerifier;
-import com.omnify.auth.infrastructure.DeviceInfoParser;
-import com.omnify.auth.infrastructure.RefreshTokenGenerator;
-import com.omnify.auth.infrastructure.VerificationTokenGenerator;
+import com.omnify.auth.infrastructure.*;
 import com.omnify.auth.notification.DuplicateRegistrationEvent;
 import com.omnify.auth.notification.UserRegisteredEvent;
 import com.omnify.auth.service.AuthService;
@@ -41,6 +38,8 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private static final String OWNER_ROLE = "owner";
+    private static final String CAPTCHA_SCOPE_REGISTER = "register";
+    private static final String CAPTCHA_SCOPE_LOGIN = "login";
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -56,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenHasher tokenHasher;
     private final DeviceInfoParser deviceInfoParser;
     private final CaptchaVerifier captchaVerifier;
+    private final CaptchaGate captchaGate;
     private final int refreshTokenTtlDays;
     @Value("${omnify.verification.phone-token-ttl-minutes}")
     private int phoneOtpTtlMinutes;
@@ -81,7 +81,7 @@ public class AuthServiceImpl implements AuthService {
         VerificationAttemptRecorder verificationAttemptRecorder,
         TokenHasher tokenHasher,
         DeviceInfoParser deviceInfoParser,
-        CaptchaVerifier captchaVerifier,
+        CaptchaVerifier captchaVerifier, CaptchaGate captchaGate,
         @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays
     ) {
         this.userRepository = userRepository;
@@ -99,15 +99,21 @@ public class AuthServiceImpl implements AuthService {
         this.tokenHasher = tokenHasher;
         this.deviceInfoParser = deviceInfoParser;
         this.captchaVerifier = captchaVerifier;
+        this.captchaGate = captchaGate;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
     @Override
     @Transactional
-    public RegisterResponse register(RegisterRequest request) {
-//        if (request.getCaptchaToken() != null && !captchaVerifier.verify(request.getCaptchaToken())) {
-//            throw new BusinessException(ErrorCode.CAPTCHA_FAILED);}
-//        bo loc recaptcha se kick hoat sau khi hoan thien fe va them rate limit
+    public RegisterResponse register(RegisterRequest request, String ipAddress) {
+        if (captchaGate.isCaptchaRequired(CAPTCHA_SCOPE_REGISTER, ipAddress)){
+            if (request.getCaptchaToken() == null){
+                throw new BusinessException(ErrorCode.CAPTCHA_REQUIRED);
+            }
+            if (!captchaVerifier.verify(request.getCaptchaToken())){
+                throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
+            }
+        }
 
         Optional<User> existingByEmail = request.getEmail() != null
             ? userRepository.findByEmail(request.getEmail())
@@ -119,16 +125,20 @@ public class AuthServiceImpl implements AuthService {
 
         if (existingByEmail.isPresent()) {
             if (existingByEmail.get().getStatus() == UserStatus.PENDING) {
+                captchaGate.recordFailure(CAPTCHA_SCOPE_REGISTER, ipAddress);
                 throw new BusinessException(ErrorCode.ACCOUNT_PENDING_VERIFICATION);
             }
             eventPublisher.publishEvent(new DuplicateRegistrationEvent(request.getEmail()));
+            captchaGate.recordFailure(CAPTCHA_SCOPE_REGISTER, ipAddress);
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         if (existingByPhone.isPresent()) {
             if (existingByPhone.get().getStatus() == UserStatus.PENDING) {
+                captchaGate.recordFailure(CAPTCHA_SCOPE_REGISTER, ipAddress);
                 throw new BusinessException(ErrorCode.ACCOUNT_PENDING_VERIFICATION);
             }
+            captchaGate.recordFailure(CAPTCHA_SCOPE_REGISTER, ipAddress);
             throw new BusinessException(ErrorCode.PHONE_ALREADY_EXISTS);
         }
 
@@ -171,6 +181,7 @@ public class AuthServiceImpl implements AuthService {
             rawToken,
             tokenType
         ));
+        captchaGate.resetAttempts(CAPTCHA_SCOPE_REGISTER, ipAddress);
 
         return RegisterResponse.builder()
             .userId(user.getId())
@@ -183,22 +194,34 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request, String ipAddress, String userAgent) {
+        if (captchaGate.isCaptchaRequired(CAPTCHA_SCOPE_LOGIN, ipAddress)){
+            if (request.getCaptchaToken() == null){
+                throw new BusinessException(ErrorCode.CAPTCHA_REQUIRED);
+            }
+            if (!captchaVerifier.verify(request.getCaptchaToken())){
+                throw new BusinessException(ErrorCode.CAPTCHA_FAILED);
+            }
+        }
+
         String identifier = request.getEmail() != null ? request.getEmail() : request.getPhone();
 
         User user = userRepository.findByEmailOrPhone(identifier).orElse(null);
 
         if (user == null) {
             loginSecurityRecorder.recordUnknownIdentifierAttempt(identifier, ipAddress, userAgent);
+            captchaGate.recordFailure(CAPTCHA_SCOPE_LOGIN, ipAddress);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         if (user.isLocked()) {
             loginSecurityRecorder.recordLockedAttempt(user.getId(), identifier, ipAddress, userAgent);
+            captchaGate.recordFailure(CAPTCHA_SCOPE_LOGIN,ipAddress);
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             loginSecurityRecorder.recordFailedAttempt(user.getId(), identifier, ipAddress, userAgent);
+            captchaGate.recordFailure(CAPTCHA_SCOPE_LOGIN,ipAddress);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -207,11 +230,13 @@ public class AuthServiceImpl implements AuthService {
                 ? LoginAttempt.FailureReason.PHONE_NOT_VERIFIED
                 : LoginAttempt.FailureReason.EMAIL_NOT_VERIFIED;
             loginSecurityRecorder.recordUnverifiedAttempt(user.getId(), identifier, ipAddress, userAgent, reason);
+            captchaGate.recordFailure(CAPTCHA_SCOPE_LOGIN,ipAddress);
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED);
         }
 
         user.registerSuccessfulLogin();
         loginAttemptRepository.save(LoginAttempt.success(user.getId(), identifier, ipAddress, userAgent));
+        captchaGate.resetAttempts(CAPTCHA_SCOPE_LOGIN, ipAddress);
 
         String role = roleAssignmentService.getPrimaryRoleName(user.getId());
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), role);

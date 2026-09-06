@@ -78,7 +78,7 @@ public class GoogleRecaptchaV3Verifier implements CaptchaVerifier {
         boolean success,
         Double score,
         String action,
-        String hostName,
+        String hostname,
         @JsonProperty("error-codes") List<String> errorCodes) {
     }
 }
