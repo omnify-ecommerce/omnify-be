@@ -10,12 +10,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VerifyPhoneRequest {
-    @Schema(example = "0794264041", description = "SDT dung khi dang ky")
+    @Schema(example = "0794264041", description = "Phone number used during registration")
     @NotBlank(message = "So dien thoai khong duoc de trong")
     @Pattern(regexp = RegexPattern.PHONE_VN, message = "Số điện thoại không đúng định dạng")
     private String phone;
 
-    @Schema(example = "123456", description = "Ma OTP 6 so gui toi SDT")
+    @Schema(example = "123456", description = "6-digit OTP code sent to the phone number")
     @NotBlank(message = "Ma xac thuc khong duoc de trong")
     @Pattern(regexp = "\\d{6}", message = "Ma xac thuc phai gom 6 chu so")
     private String otpCode;

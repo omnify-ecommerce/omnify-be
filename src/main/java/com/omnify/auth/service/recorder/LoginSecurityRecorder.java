@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Component
@@ -40,7 +40,7 @@ public class LoginSecurityRecorder {
         int failedCount = userRepository.findFailedLoginCount(userId);
         int lockSeconds = lockoutProperties.resolveLockSeconds(failedCount);
         if (lockSeconds > 0) {
-            userRepository.setLockedUntil(userId, OffsetDateTime.now().plusSeconds(lockSeconds));
+            userRepository.setLockedUntil(userId, Instant.now().plusSeconds(lockSeconds));
         }
         loginAttemptRepository.save(LoginAttempt.failure(
             userId, identifier, ipAddress, userAgent, LoginAttempt.FailureReason.INVALID_CREDENTIALS));

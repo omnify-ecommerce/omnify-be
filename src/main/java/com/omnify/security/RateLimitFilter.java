@@ -25,11 +25,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RedissonClient redissonClient;
     private final RateLimitProperties properties; //class quyet dinh cau hinh khi ratelimit
     private final ObjectMapper objectMapper;
+    private final ClientIpResolver clientIpResolver;
 
-    public RateLimitFilter(RedissonClient redissonClient, RateLimitProperties properties, ObjectMapper objectMapper) {
+    public RateLimitFilter(RedissonClient redissonClient, RateLimitProperties properties, ObjectMapper objectMapper, ClientIpResolver clientIpResolver) {
         this.redissonClient = redissonClient;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
         // Moi rule +IP co 1 bo diem rieng tren redis tranh dung nhau giua cac endpoint
-        String clientIp = resolveClientIp(request);
+        String clientIp = clientIpResolver.resolve(request);
         String key = "rate_limit:" + rule.name() + ":" + clientIp;
 
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(key);
@@ -57,8 +59,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(ErrorCode.RATE_LIMIT_EXCEEDED.getHttpStatus().value());
             response.setContentType("application/json;charset=UTF-8");
             ApiResponse<Void> body = ApiResponse.error(
-                ErrorCode.RATE_LIMIT_EXCEEDED.name(),
-                ErrorCode.RATE_LIMIT_EXCEEDED.getDefaultMessage());
+                ErrorCode.RATE_LIMIT_EXCEEDED.getDefaultMessage(),
+                ErrorCode.RATE_LIMIT_EXCEEDED.name()
+                );
             response.getWriter().write(objectMapper.writeValueAsString(body));
             return;
         }
@@ -66,11 +69,4 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
-    }
 }

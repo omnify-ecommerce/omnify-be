@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,5 +35,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Modifying
     @Query("UPDATE User u SET u.lockedUntil = :lockedUntil WHERE u.id = :userId")
-    void setLockedUntil(@Param("userId") UUID userId, @Param("lockedUntil") OffsetDateTime lockedUntil);
+    void setLockedUntil(@Param("userId") UUID userId, @Param("lockedUntil") Instant lockedUntil);
 }

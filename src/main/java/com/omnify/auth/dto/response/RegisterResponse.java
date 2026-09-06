@@ -10,19 +10,19 @@ import java.util.UUID;
 @Builder
 @Schema(
     name = "RegisterResponse",
-    description = "Thông tin trả về sau khi đăng ký tài khoản thành công"
+    description = "Information returned after a successful account registration"
 )
 public class RegisterResponse {
 
-    @Schema(description = "ID của người dùng vừa được tạo", example = "eee5a030-6b88-4f84-9a07-51004e3398de")
+    @Schema(description = "ID of the newly created user", example = "eee5a030-6b88-4f84-9a07-51004e3398de")
     private final UUID userId;
 
-    @Schema(description = "Trạng thái của tài khoản sau khi đăng ký", example = "PENDING")
+    @Schema(description = "Account status after registration", example = "PENDING")
     private final String status;
 
-    @Schema(description = "Kênh xác thực được sử dụng", example = "EMAIL_VERIFICATION")
+    @Schema(description = "Verification channel used", example = "EMAIL_VERIFICATION")
     private final String verificationChannel;
 
-    @Schema(description = "Vai trò được gán cho người dùng", example = "owner")
+    @Schema(description = "Role assigned to the user", example = "owner")
     private final String assignedRole;
 }

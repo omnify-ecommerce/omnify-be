@@ -3,7 +3,6 @@
 -- ========================================================================
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "citext";
-CREATE EXTENSION IF NOT EXISTS "moddatetime";
 
 -- ========================================================================
 -- ENUMS
@@ -13,19 +12,26 @@ CREATE TYPE user_status AS ENUM (
     'INACTIVE',
     'SUSPENDED',
     'PENDING'
-);
+    );
+
+CREATE TYPE user_gender AS ENUM (
+    'MALE',
+    'FEMALE',
+    'OTHER',
+    'UNSPECIFIED'
+    );
 
 CREATE TYPE marketplace_type AS ENUM (
     'SHOPEE',
     'LAZADA',
     'TIKTOK_SHOP'
-);
+    );
 
 CREATE TYPE token_status AS ENUM (
     'VALID',
     'EXPIRED',
     'REVOKED'
-);
+    );
 
 CREATE TYPE verification_type AS ENUM (
     'EMAIL_VERIFICATION',
@@ -33,7 +39,7 @@ CREATE TYPE verification_type AS ENUM (
     'PHONE_VERIFICATION',
     'PHONE_CHANGE',
     'PASSWORD_RESET'
-);
+    );
 
 CREATE TYPE login_failure_reason AS ENUM (
     'INVALID_CREDENTIALS',
@@ -43,18 +49,18 @@ CREATE TYPE login_failure_reason AS ENUM (
     'EMAIL_NOT_VERIFIED',
     'PHONE_NOT_VERIFIED',
     'MFA_FAILED'
-);
+    );
 
 CREATE TYPE mfa_type AS ENUM (
     'TOTP',
     'SMS',
     'EMAIL'
-);
+    );
 
 CREATE TYPE mfa_channel AS ENUM (
     'SMS',
     'EMAIL'
-);
+    );
 
 CREATE TYPE mfa_purpose AS ENUM (
     'LOGIN',
@@ -62,20 +68,16 @@ CREATE TYPE mfa_purpose AS ENUM (
     'ENABLE_MFA',
     'DISABLE_MFA',
     'DELETE_ACCOUNT'
-);
+    );
 
 -- ========================================================================
 -- TABLE: USERS
 -- ========================================================================
 CREATE TABLE users (
                        id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                       email                   CITEXT NOT NULL,
+                       email                   CITEXT,
                        phone                   VARCHAR(20),
                        password_hash           VARCHAR(255) NOT NULL,
-                       full_name               VARCHAR(255) NOT NULL,
-                       avatar_url              TEXT,
-                       locale                  VARCHAR(10) NOT NULL DEFAULT 'vi-VN',
-                       timezone                VARCHAR(50) NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
                        status                  user_status NOT NULL DEFAULT 'PENDING',
                        email_verified          BOOLEAN NOT NULL DEFAULT FALSE,
                        phone_verified          BOOLEAN NOT NULL DEFAULT FALSE,
@@ -85,18 +87,42 @@ CREATE TABLE users (
                        last_login_at           TIMESTAMPTZ,
                        created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                        updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                       deleted_at              TIMESTAMPTZ,
+                       created_by              UUID REFERENCES users (id) ON DELETE SET NULL,
+                       updated_by              UUID REFERENCES users (id) ON DELETE SET NULL,
+                       is_deleted              BOOLEAN NOT NULL DEFAULT FALSE,
+                       version                 BIGINT NOT NULL DEFAULT 0,
+                       CONSTRAINT chk_users_email_or_phone CHECK (email IS NOT NULL OR phone IS NOT NULL),
                        CONSTRAINT chk_users_failed_login_count CHECK (failed_login_count >= 0)
 );
 
-CREATE UNIQUE INDEX uq_users_email_active ON users (email) WHERE deleted_at IS NULL;
-CREATE UNIQUE INDEX uq_users_phone_active ON users (phone) WHERE deleted_at IS NULL;
-CREATE INDEX idx_users_status ON users (status) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX uq_users_email_active ON users (email) WHERE is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_users_phone_active ON users (phone) WHERE is_deleted = FALSE;
+CREATE INDEX idx_users_status ON users (status) WHERE is_deleted = FALSE;
 
-CREATE TRIGGER trg_users_updated_at
-    BEFORE UPDATE ON users
-    FOR EACH ROW
-    EXECUTE FUNCTION moddatetime(updated_at);
+-- ========================================================================
+-- TABLE: USER PROFILES
+-- ========================================================================
+CREATE TABLE user_profiles (
+                               user_id         UUID PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+                               first_name      VARCHAR(100) NOT NULL,
+                               last_name       VARCHAR(100) NOT NULL,
+                               display_name    VARCHAR(255),
+                               avatar_url      TEXT,
+                               cover_url       TEXT,
+                               gender          user_gender NOT NULL DEFAULT 'UNSPECIFIED',
+                               date_of_birth   DATE,
+                               bio             TEXT,
+                               company_name    VARCHAR(255),
+                               tax_code        VARCHAR(50),
+                               address_line    TEXT,
+                               city            VARCHAR(100),
+                               country_code    VARCHAR(2) NOT NULL DEFAULT 'VN',
+                               created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                               updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                               created_by      UUID REFERENCES users (id) ON DELETE SET NULL,
+                               updated_by      UUID REFERENCES users (id) ON DELETE SET NULL,
+                               version         BIGINT NOT NULL DEFAULT 0
+);
 
 -- ========================================================================
 -- TABLE: ROLES & PERMISSIONS
@@ -107,13 +133,11 @@ CREATE TABLE roles (
                        description TEXT,
                        is_system   BOOLEAN NOT NULL DEFAULT FALSE,
                        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                       updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                       updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                       created_by  UUID REFERENCES users (id) ON DELETE SET NULL,
+                       updated_by  UUID REFERENCES users (id) ON DELETE SET NULL,
+                       version     BIGINT NOT NULL DEFAULT 0
 );
-
-CREATE TRIGGER trg_roles_updated_at
-    BEFORE UPDATE ON roles
-    FOR EACH ROW
-    EXECUTE FUNCTION moddatetime(updated_at);
 
 CREATE TABLE permissions (
                              id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -121,7 +145,7 @@ CREATE TABLE permissions (
                              resource    VARCHAR(50) NOT NULL,
                              action      VARCHAR(50) NOT NULL,
                              description TEXT,
-                             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                             created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                              CONSTRAINT uq_permissions_resource_action UNIQUE (resource, action)
 );
 
@@ -166,13 +190,15 @@ CREATE INDEX idx_refresh_tokens_user_status ON refresh_tokens (user_id, status);
 -- TABLE: VERIFICATION TOKENS (Email/Phone Verification & Password Reset)
 -- ========================================================================
 CREATE TABLE verification_tokens (
-                                     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                     user_id     UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-                                     token_hash  VARCHAR(255) UNIQUE NOT NULL,
-                                     type        verification_type NOT NULL,
-                                     expires_at  TIMESTAMPTZ NOT NULL,
-                                     used_at     TIMESTAMPTZ,
-                                     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                     user_id         UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+                                     token_hash      VARCHAR(255) UNIQUE NOT NULL,
+                                     type            verification_type NOT NULL,
+                                     attempt_count   INTEGER NOT NULL DEFAULT 0,
+                                     expires_at      TIMESTAMPTZ NOT NULL,
+                                     used_at         TIMESTAMPTZ,
+                                     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                                     CONSTRAINT chk_verification_tokens_attempt_count CHECK (attempt_count >= 0)
 );
 
 CREATE INDEX idx_verification_tokens_user ON verification_tokens (user_id);
@@ -207,13 +233,17 @@ CREATE TABLE mfa_methods (
                              is_enabled          BOOLEAN NOT NULL DEFAULT FALSE,
                              is_primary          BOOLEAN NOT NULL DEFAULT FALSE,
                              created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                             updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                             created_by          UUID REFERENCES users (id) ON DELETE SET NULL,
+                             updated_by          UUID REFERENCES users (id) ON DELETE SET NULL,
+                             version             BIGINT NOT NULL DEFAULT 0,
                              CONSTRAINT uq_mfa_methods_user_type UNIQUE (user_id, type),
                              CONSTRAINT chk_totp_secret CHECK (
                                  type != 'TOTP' OR (secret_encrypted IS NOT NULL AND destination IS NULL)
-),
-    CONSTRAINT chk_channel_destination CHECK (
-        type = 'TOTP' OR (destination IS NOT NULL AND secret_encrypted IS NULL)
-    )
+                                 ),
+                             CONSTRAINT chk_channel_destination CHECK (
+                                 type = 'TOTP' OR (destination IS NOT NULL AND secret_encrypted IS NULL)
+                                 )
 );
 
 CREATE INDEX idx_mfa_methods_user ON mfa_methods (user_id);
@@ -272,15 +302,13 @@ CREATE TABLE marketplace_shops (
                                    disconnected_at         TIMESTAMPTZ,
                                    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                                    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                                   created_by              UUID REFERENCES users (id) ON DELETE SET NULL,
+                                   updated_by              UUID REFERENCES users (id) ON DELETE SET NULL,
+                                   version                 BIGINT NOT NULL DEFAULT 0,
                                    CONSTRAINT uq_marketplace_shop UNIQUE (marketplace, shop_id)
 );
 
 CREATE INDEX idx_marketplace_shops_user ON marketplace_shops (user_id);
-
-CREATE TRIGGER trg_marketplace_shops_updated_at
-    BEFORE UPDATE ON marketplace_shops
-    FOR EACH ROW
-    EXECUTE FUNCTION moddatetime(updated_at);
 
 -- ========================================================================
 -- TABLE: AUDIT LOGS
@@ -297,3 +325,10 @@ CREATE TABLE audit_logs (
 
 CREATE INDEX idx_audit_logs_user ON audit_logs (user_id);
 CREATE INDEX idx_audit_logs_created ON audit_logs (created_at);
+
+-- ========================================================================
+-- SEED DATA: SYSTEM ROLES
+-- ========================================================================
+INSERT INTO roles (name, description, is_system) VALUES
+                                                     ('owner', 'Chủ shop - toàn quyền quản trị công ty/shop của mình', true),
+                                                     ('admin', 'Platform admin (Omnify) - quản lý toàn bộ tenant', true);

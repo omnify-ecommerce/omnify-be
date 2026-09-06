@@ -39,7 +39,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(
-            ApiResponse.error(ErrorCode.INVALID_CREDENTIALS.name(), "Yeu cau xac thuc de truy cap duong dan nay")
+            ApiResponse.error("Yeu cau xac thuc de truy cap duong dan nay", ErrorCode.INVALID_CREDENTIALS.name())
         ));
     }
 }

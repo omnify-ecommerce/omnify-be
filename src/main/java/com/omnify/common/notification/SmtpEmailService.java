@@ -1,6 +1,6 @@
 package com.omnify.common.notification;
 
-import com.omnify.config.MailProperties;
+import com.omnify.config.properties.MailProperties;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class SmtpEmailService implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
             //thiet lap nguoi gui
-            helper.setFrom(mailProperties.getFromAddress(), mailProperties.getFromName());
+            helper.setFrom(mailProperties.fromAddress(), mailProperties.fromName());
             //nguoi nhan
             helper.setTo(toAddress);
             //chu de mail da config ben class verificationemailsender

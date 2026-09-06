@@ -5,6 +5,7 @@ import com.omnify.auth.dto.response.LoginResponse;
 import com.omnify.auth.dto.response.RegisterResponse;
 import com.omnify.auth.service.AuthService;
 import com.omnify.security.AuthenticatedUser;
+import com.omnify.security.ClientIpResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -32,9 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final ClientIpResolver clientIpResolver;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, ClientIpResolver clientIpResolver) {
         this.authService = authService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @Operation(
@@ -67,7 +70,11 @@ public class AuthController {
             responseCode = "400",
             description = "VALIDATION_ERROR - Password must be at least 8 characters" +
                 " and contain uppercase, lowercase, and numeric characters. " +
-                "Email, phone number, first name, and last name must be valid and cannot be empty.",
+                "Email, phone number, first name, and last name must be valid and cannot be empty. <br>" +
+                "CAPTCHA_REQUIRED - Too many failed attempts from this IP, a captchaTokenV3 is now required. <br>" +
+                "CAPTCHA_STEP_UP_REQUIRED - The v3 captcha score is too low, resubmit with only captchaTokenV2 " +
+                "(reCAPTCHA v2 challenge, the v3 token is single-use and no longer needed). <br>" +
+                "CAPTCHA_FAILED - The provided captchaTokenV3/captchaTokenV2 is invalid.",
             content = @Content),
         @ApiResponse(
             responseCode = "409",
@@ -87,9 +94,11 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<com.omnify.common.response.ApiResponse<RegisterResponse>> register(
-        @Valid @RequestBody RegisterRequest request
+        @Valid @RequestBody RegisterRequest request,
+        HttpServletRequest httpRequest
     ) {
-        RegisterResponse response = authService.register(request);
+        String ipAddress = clientIpResolver.resolve(httpRequest);
+        RegisterResponse response = authService.register(request, ipAddress);
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(com.omnify.common.response.ApiResponse.success(response, "Đăng ký thành công, vui lòng xác thực tài khoản"));
@@ -126,7 +135,11 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "VALIDATION_ERROR - Username/email/phone and password cannot be empty.",
+            description = "VALIDATION_ERROR - Username/email/phone and password cannot be empty. <br>" +
+                "CAPTCHA_REQUIRED - Too many failed attempts from this IP, a captchaTokenV3 is now required. <br>" +
+                "CAPTCHA_STEP_UP_REQUIRED - The v3 captcha score is too low, resubmit with only captchaTokenV2 " +
+                "(reCAPTCHA v2 challenge, the v3 token is single-use and no longer needed). <br>" +
+                "CAPTCHA_FAILED - The provided captchaTokenV3/captchaTokenV2 is invalid.",
             content = @Content
         ),
         @ApiResponse(
@@ -157,7 +170,7 @@ public class AuthController {
         @Valid @RequestBody LoginRequest request,
         HttpServletRequest httpRequest
     ) {
-        String ipAddress = httpRequest.getRemoteAddr();
+        String ipAddress = clientIpResolver.resolve(httpRequest);
         String userAgent = httpRequest.getHeader("User-Agent");
         LoginResponse response = authService.login(request, ipAddress, userAgent);
         return ResponseEntity.ok(com.omnify.common.response.ApiResponse.success(response, "Đăng nhập thành công"));
@@ -252,7 +265,7 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "429",
-            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later. <br>"+
+            description = "RATE_LIMIT_EXCEEDED - Too many requests. Please try again later. <br>" +
                 "OTP_LOCKED - You have exceeded the maximum number of allowed attempts; please request a new code",
             content = @Content
         ),
@@ -393,7 +406,7 @@ public class AuthController {
         @Valid @RequestBody RefreshTokenRequest request,
         HttpServletRequest httpRequest
     ) {
-        String ipAddress = httpRequest.getRemoteAddr();
+        String ipAddress = clientIpResolver.resolve(httpRequest);
         String userAgent = httpRequest.getHeader("User-Agent");
 
         LoginResponse response = authService.refreshToken(request.getRefreshToken(), ipAddress, userAgent);
