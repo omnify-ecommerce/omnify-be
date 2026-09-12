@@ -1,0 +1,20 @@
+spring:
+  jpa:
+    show-sql: false
+
+  flyway:
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      password: ${REDIS_PASSWORD}
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    com.omnify: INFO
