@@ -1,9 +1,10 @@
 package com.omnify.auth.domain.repository;
 
-import com.omnify.auth.domain.entity.LoginAttempt;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.UUID;
+import com.omnify.auth.domain.entity.LoginAttempt;
 
 public interface LoginAttemptRepository extends JpaRepository<LoginAttempt, UUID> {
 }

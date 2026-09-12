@@ -3,6 +3,9 @@ package com.omnify.auth.service.impl;
 import com.omnify.auth.domain.entity.LoginAttempt;
 import com.omnify.auth.domain.entity.RefreshToken;
 import com.omnify.auth.domain.entity.VerificationToken;
+import com.omnify.auth.domain.enums.LoginFailureReason;
+import com.omnify.auth.domain.enums.TokenStatus;
+import com.omnify.auth.domain.enums.VerificationType;
 import com.omnify.auth.domain.repository.LoginAttemptRepository;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
 import com.omnify.auth.domain.repository.VerificationTokenRepository;
@@ -25,7 +28,7 @@ import com.omnify.rbac.service.RoleAssignmentService;
 import com.omnify.security.JwtTokenProvider;
 import com.omnify.security.TokenHasher;
 import com.omnify.user.domain.entity.User;
-import com.omnify.user.domain.entity.UserStatus;
+import com.omnify.user.domain.enums.UserStatus;
 import com.omnify.user.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,7 +36,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,15 +60,15 @@ public class AuthServiceImpl implements AuthService {
     private final TokenHasher tokenHasher;
     private final DeviceInfoParser deviceInfoParser;
     private final CaptchaVerifier captchaVerifier;
-    private final int refreshTokenTtlDays;
+    private final Duration refreshTokenTtlDays;
     @Value("${omnify.verification.phone-token-ttl-minutes}")
-    private int phoneOtpTtlMinutes;
+    private Duration phoneOtpTtlMinutes;
     @Value("${omnify.verification.resend-cooldown-seconds}")
     private long resendCooldownSeconds;
     @Value("${omnify.verification.max-otp-attempts}")
     private int maxOtpAttempts;
     @Value("${omnify.verification.email-token-ttl-minutes}")
-    private int emailTokenTtlMinutes;
+    private Duration emailTokenTtlMinutes;
 
     public AuthServiceImpl(
         UserRepository userRepository,
@@ -82,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
         TokenHasher tokenHasher,
         DeviceInfoParser deviceInfoParser,
         CaptchaVerifier captchaVerifier,
-        @Value("${omnify.security.auth.refresh-token-ttl-days}") int refreshTokenTtlDays
+        @Value("${omnify.security.auth.refresh-token-ttl-days}") Duration refreshTokenTtlDays
     ) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
@@ -137,35 +141,32 @@ public class AuthServiceImpl implements AuthService {
             .email(request.getEmail())
             .phone(request.getPhone())
             .passwordHash(passwordHash)
-            .firstName(request.getFirstName())
-            .lastName(request.getLastName())
             .build();
         user = userRepository.save(user);
 
         roleAssignmentService.assignRole(user.getId(), OWNER_ROLE, null);
 
         boolean useEmailChannel = request.getEmail() != null;
-        VerificationToken.Type tokenType = useEmailChannel
-            ? VerificationToken.Type.EMAIL_VERIFICATION
-            : VerificationToken.Type.PHONE_VERIFICATION;
+        VerificationType tokenType = useEmailChannel
+            ? VerificationType.EMAIL_VERIFICATION
+            : VerificationType.PHONE_VERIFICATION;
 
         String rawToken = useEmailChannel
             ? verificationTokenGenerator.generateEmailToken()
             : verificationTokenGenerator.generatePhoneOtp();
 
-        int ttlMinutes = useEmailChannel ? emailTokenTtlMinutes : phoneOtpTtlMinutes;
+        Duration ttlMinutes = useEmailChannel ? emailTokenTtlMinutes : phoneOtpTtlMinutes;
 
         VerificationToken verificationToken = VerificationToken.issue(
             user.getId(),
             verificationTokenGenerator.hash(rawToken),
             tokenType,
-            OffsetDateTime.now().plusMinutes(ttlMinutes)
+            Instant.now().plus(ttlMinutes)
         );
         verificationTokenRepository.save(verificationToken);
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
             user.getId(),
-            user.getFullName(),
             user.getEmail(),
             user.getPhone(),
             rawToken,
@@ -203,9 +204,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (user.getStatus() == UserStatus.PENDING) {
-            LoginAttempt.FailureReason reason = user.isEmailVerified()
-                ? LoginAttempt.FailureReason.PHONE_NOT_VERIFIED
-                : LoginAttempt.FailureReason.EMAIL_NOT_VERIFIED;
+            LoginFailureReason reason = user.isEmailVerified()
+                ? LoginFailureReason.PHONE_NOT_VERIFIED
+                : LoginFailureReason.EMAIL_NOT_VERIFIED;
             loginSecurityRecorder.recordUnverifiedAttempt(user.getId(), identifier, ipAddress, userAgent, reason);
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED);
         }
@@ -223,7 +224,7 @@ public class AuthServiceImpl implements AuthService {
             deviceInfoParser.parseDeviceName(userAgent),
             userAgent,
             ipAddress,
-            OffsetDateTime.now().plusDays(refreshTokenTtlDays)
+            Instant.now().plus(refreshTokenTtlDays)
         );
 
         refreshTokenRepository.save(refreshToken);
@@ -249,7 +250,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         VerificationToken token = verificationTokenRepository
-            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION)
+            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationType.EMAIL_VERIFICATION)
             .orElseThrow(() -> new BusinessException(ErrorCode.OTP_INVALID));
 
         if (token.isExpired()) {
@@ -287,12 +288,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Optional<VerificationToken> lastToken = verificationTokenRepository
-            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.EMAIL_VERIFICATION);
+            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationType.EMAIL_VERIFICATION);
 
         if (lastToken.isPresent()) {
             VerificationToken last = lastToken.get();
-            OffsetDateTime nextAllowedAt = last.getCreatedAt().plusSeconds(resendCooldownSeconds);
-            if (OffsetDateTime.now().isBefore(nextAllowedAt)) {
+            Instant nextAllowedAt = last.getCreatedAt().plusSeconds(resendCooldownSeconds);
+            if (Instant.now().isBefore(nextAllowedAt)) {
                 throw new BusinessException(ErrorCode.RESEND_COOLDOWN);
             }
             if (!last.isUsed()) {
@@ -305,14 +306,14 @@ public class AuthServiceImpl implements AuthService {
         VerificationToken newToken = VerificationToken.issue(
             user.getId(),
             verificationTokenGenerator.hash(rawOtp),
-            VerificationToken.Type.EMAIL_VERIFICATION,
-            OffsetDateTime.now().plusMinutes(emailTokenTtlMinutes)
+            VerificationType.EMAIL_VERIFICATION,
+            Instant.now().plus(emailTokenTtlMinutes)
         );
         verificationTokenRepository.save(newToken);
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
-            user.getId(), user.getFullName(), user.getEmail(), user.getPhone(),
-            rawOtp, VerificationToken.Type.EMAIL_VERIFICATION
+            user.getId(), user.getEmail(), user.getPhone(),
+            rawOtp, VerificationType.EMAIL_VERIFICATION
         ));
     }
 
@@ -324,12 +325,12 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken token = refreshTokenRepository.findByTokenHash(tokenHash)
             .orElseThrow(() -> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID));
 
-        if (token.getStatus() == RefreshToken.Status.REVOKED) {
+        if (token.getStatus() == TokenStatus.REVOKED) {
             loginSecurityRecorder.revokeAllSessionsOnReuseDetected(token.getUserId());
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED);
         }
 
-        if (token.getExpiresAt().isBefore(OffsetDateTime.now())) {
+        if (token.getExpiresAt().isBefore(Instant.now())) {
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
@@ -354,7 +355,7 @@ public class AuthServiceImpl implements AuthService {
             token.getDeviceName(),
             userAgent,
             ipAddress,
-            OffsetDateTime.now().plusDays(refreshTokenTtlDays)
+            Instant.now().plus(refreshTokenTtlDays)
         );
         refreshTokenRepository.save(newToken);
 
@@ -378,7 +379,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
         //
-        if (token.getStatus() == RefreshToken.Status.VALID) {
+        if (token.getStatus() == TokenStatus.VALID) {
             token.revoke();
             refreshTokenRepository.save(token);
         }
@@ -395,7 +396,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         VerificationToken token = verificationTokenRepository
-            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.PHONE_VERIFICATION)
+            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationType.PHONE_VERIFICATION)
             .orElseThrow(() -> new BusinessException(ErrorCode.OTP_INVALID));
 
         if (token.isExpired()) {
@@ -434,12 +435,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Optional<VerificationToken> lastToken = verificationTokenRepository
-            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationToken.Type.PHONE_VERIFICATION);
+            .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), VerificationType.PHONE_VERIFICATION);
 
         if (lastToken.isPresent()) {
             VerificationToken last = lastToken.get();
-            OffsetDateTime nextAllowedAt = last.getCreatedAt().plusSeconds(resendCooldownSeconds);
-            if (OffsetDateTime.now().isBefore(nextAllowedAt)) {
+            Instant nextAllowedAt = last.getCreatedAt().plusSeconds(resendCooldownSeconds);
+            if (Instant.now().isBefore(nextAllowedAt)) {
                 throw new BusinessException(ErrorCode.RESEND_COOLDOWN);
             }
             if (!last.isUsed()) {
@@ -452,18 +453,17 @@ public class AuthServiceImpl implements AuthService {
         VerificationToken newToken = VerificationToken.issue(
             user.getId(),
             verificationTokenGenerator.hash(rawOtp),
-            VerificationToken.Type.PHONE_VERIFICATION,
-            OffsetDateTime.now().plusMinutes(phoneOtpTtlMinutes)
+            VerificationType.PHONE_VERIFICATION,
+            Instant.now().plus(phoneOtpTtlMinutes)
         );
         verificationTokenRepository.save(newToken);
 
         eventPublisher.publishEvent(new UserRegisteredEvent(
             user.getId(),
-            user.getFullName(),
             user.getEmail(),
             user.getPhone(),
             rawOtp,
-            VerificationToken.Type.PHONE_VERIFICATION
+            VerificationType.PHONE_VERIFICATION
 
         ));
     }

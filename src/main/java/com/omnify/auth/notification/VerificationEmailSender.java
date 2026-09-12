@@ -13,13 +13,13 @@ public class VerificationEmailSender {
         this.emailService = emailService;
     }
 
-    public void sendVerificationEmail(String toEmail, String fullName, String otpCode) {
+    public void sendVerificationEmail(String toEmail, String otpCode) {
         String subject = "Mã xác thực tài khoản Omnify";
-        String html = buildHtml(fullName, otpCode);
+        String html = buildHtml(toEmail, otpCode);
         emailService.sendHtml(toEmail, subject, html);
     }
 
-    private String buildHtml(String fullName, String otpCode) {
+    private String buildHtml(String toEmail, String otpCode) {
         return """
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;">
                 <h2>Xin chào %s,</h2>
@@ -29,6 +29,6 @@ public class VerificationEmailSender {
                 <p>Mã có hiệu lực trong 30 phút. Vui lòng nhập mã này vào ứng dụng để hoàn tất xác thực.</p>
                 <p>Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua email này.</p>
             </div>
-            """.formatted(fullName, otpCode);
+            """.formatted(toEmail, otpCode);
     }
 }

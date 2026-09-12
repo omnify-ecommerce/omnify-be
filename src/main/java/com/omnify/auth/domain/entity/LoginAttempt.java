@@ -1,56 +1,78 @@
 package com.omnify.auth.domain.entity;
 
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.Instant;
+import java.util.UUID;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import com.omnify.auth.domain.enums.LoginFailureReason;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "login_attempts")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginAttempt {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
+
     @Column(name = "user_id")
     private UUID userId;
-    @Column(name = "identifier", nullable = false)
+
+    @Column(nullable = false, length = 255)
     private String identifier;
-    @Column(name = "success", nullable = false)
-    private boolean success;
+
+    @Column(nullable = false)
+    private Boolean success;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "failure_reason", columnDefinition = "login_failure_reason")
-    private FailureReason failureReason;
-    @Column(name = "ip_address", columnDefinition = "INET", nullable = false)
-    @JdbcTypeCode(SqlTypes.INET)
-    private String ipAddress;
-    @Column(name = "user_agent")
-    private String userAgent;
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "failure_reason")
+    private LoginFailureReason failureReason;
 
-    public static LoginAttempt success(UUID userId, String identifier, String ipAddress, String userAgent) {
+    @Column(name = "ip_address", columnDefinition = "inet", nullable = false)
+    private String ipAddress;
+
+    @Column(name = "user_agent", columnDefinition = "text")
+    private String userAgent;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    public static LoginAttempt success(
+            UUID userId,
+            String identifier,
+            String ipAddress,
+            String userAgent
+    ) {
         LoginAttempt attempt = new LoginAttempt();
         attempt.userId = userId;
         attempt.identifier = identifier;
         attempt.success = true;
+        attempt.failureReason = null;
         attempt.ipAddress = ipAddress;
         attempt.userAgent = userAgent;
         return attempt;
     }
 
     public static LoginAttempt failure(
-        UUID userId, String identifier, String ipAddress, String userAgent,
-        FailureReason failureReason
+            UUID userId,
+            String identifier,
+            LoginFailureReason failureReason,
+            String ipAddress,
+            String userAgent
     ) {
         LoginAttempt attempt = new LoginAttempt();
         attempt.userId = userId;
@@ -60,16 +82,5 @@ public class LoginAttempt {
         attempt.ipAddress = ipAddress;
         attempt.userAgent = userAgent;
         return attempt;
-    }
-
-
-    public enum FailureReason {
-        INVALID_CREDENTIALS,
-        ACCOUNT_NOT_FOUND,
-        ACCOUNT_LOCKED,
-        ACCOUNT_DISABLED,
-        EMAIL_NOT_VERIFIED,
-        PHONE_NOT_VERIFIED,
-        MFA_FAILED
     }
 }

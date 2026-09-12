@@ -50,6 +50,4 @@ public class RegisterRequest implements EmailOrPhoneCarrier {
     public void setPhone(String phone) {
         this.phone = (phone == null || phone.isBlank()) ? null : phone.trim();
     }
-
-
 }

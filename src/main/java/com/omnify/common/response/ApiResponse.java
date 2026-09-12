@@ -1,49 +1,33 @@
 package com.omnify.common.response;
 
 import java.time.Instant;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class ApiResponse<T> {
-
-    private boolean success;
-    private String message;
-    private T data;
-    private String errorCode;
-    private Instant timestamp;
-
-    private ApiResponse(boolean success, String message, T data, String errorCode) {
-        this.success = success;
-        this.message = message;
-        this.data = data;
-        this.errorCode = errorCode;
-        this.timestamp = Instant.now();
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record ApiResponse<T>(
+    boolean success,
+    String message,
+    T data,
+    String errorCode,
+    List<ErrorDetail> errors,
+    Instant timestamp
+) {
+    
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, "Success", data, null, null, Instant.now());
     }
 
     public static <T> ApiResponse<T> success(T data, String message) {
-        return new ApiResponse<>(true, message, data, null);
+        return new ApiResponse<>(true, message, data, null, null, Instant.now());
     }
 
-    public static <T> ApiResponse<T> error(String errorCode, String message) {
-        return new ApiResponse<>(false, message, null, errorCode);
+    public static <T> ApiResponse<T> error(String message, String errorCode) {
+        return new ApiResponse<>(false, message, null, errorCode, null, Instant.now());
     }
 
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
+    public static <T> ApiResponse<T> error(String message, String errorCode, List<ErrorDetail> errors) {
+        return new ApiResponse<>(false, message, null, errorCode, errors, Instant.now());
     }
 }
