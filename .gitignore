@@ -13,12 +13,6 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -29,8 +23,23 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
 ### VS Code ###
 .vscode/
 
-### Environment ###
+### macOS / OS junk ###
+.DS_Store
+
+### Environment / secrets ###
 .env
+.env.local
+*.env.local
+application-local.yml
+
+### Logs ###
+*.log
