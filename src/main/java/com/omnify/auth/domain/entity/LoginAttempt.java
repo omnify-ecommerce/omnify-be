@@ -42,6 +42,7 @@ public class LoginAttempt {
     private LoginFailureReason failureReason;
 
     @Column(name = "ip_address", columnDefinition = "inet", nullable = false)
+    @JdbcTypeCode(SqlTypes.INET)
     private String ipAddress;
 
     @Column(name = "user_agent", columnDefinition = "text")
