@@ -1,52 +1,74 @@
 package com.omnify.auth.domain.entity;
 
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.Instant;
+import java.util.UUID;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import com.omnify.auth.domain.enums.TokenStatus;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "refresh_tokens")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshToken {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
+
     @Column(name = "user_id", nullable = false)
     private UUID userId;
-    @Column(name = "token_hash", nullable = false)
+
+    @Column(name = "token_hash", nullable = false, unique = true, length = 255)
     private String tokenHash;
+
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", nullable = false, columnDefinition = "token_status")
-    private Status status = Status.VALID;
-    @Column(name = "device_name")
+    @Column(nullable = false)
+    private TokenStatus status = TokenStatus.VALID;
+
+    @Column(name = "device_name", length = 100)
     private String deviceName;
-    @Column(name = "user_agent")
+
+    @Column(name = "user_agent", columnDefinition = "text")
     private String userAgent;
-    @Column(name = "ip_address", columnDefinition = "INET", nullable = false)
+
+    @Column(name = "ip_address", columnDefinition = "inet")
     @JdbcTypeCode(SqlTypes.INET)
     private String ipAddress;
-    @Column(name = "last_used_at")
-    private OffsetDateTime lastUsedAt;
+
     @Column(name = "expires_at", nullable = false)
-    private OffsetDateTime expiresAt;
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    private Instant expiresAt;
+
     @Column(name = "revoked_at")
-    private OffsetDateTime revokedAt;
+    private Instant revokedAt;
+
+    @Column(name = "last_used_at")
+    private Instant lastUsedAt;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     public static RefreshToken issue(
-        UUID userId, String tokenHash, String deviceName,
-        String userAgent, String ipAddress, OffsetDateTime expiresAt
+            UUID userId,
+            String tokenHash,
+            String deviceName,
+            String userAgent,
+            String ipAddress,
+            Instant expiresAt
     ) {
         RefreshToken token = new RefreshToken();
         token.userId = userId;
@@ -59,19 +81,15 @@ public class RefreshToken {
     }
 
     public boolean isActive() {
-        return status == Status.VALID && expiresAt.isAfter(OffsetDateTime.now());
+        return status == TokenStatus.VALID && expiresAt.isAfter(Instant.now());
     }
 
     public void revoke() {
-        this.status = Status.REVOKED;
-        this.revokedAt = OffsetDateTime.now();
+        this.status = TokenStatus.REVOKED;
+        this.revokedAt = Instant.now();
     }
 
     public void touchLastUsed() {
-        this.lastUsedAt = OffsetDateTime.now();
-    }
-
-    public enum Status {
-        VALID, EXPIRED, REVOKED
+        this.lastUsedAt = Instant.now();
     }
 }

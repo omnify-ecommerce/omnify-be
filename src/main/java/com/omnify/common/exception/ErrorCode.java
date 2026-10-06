@@ -2,21 +2,31 @@ package com.omnify.common.exception;
 
 import org.springframework.http.HttpStatus;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum ErrorCode {
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dữ liệu đầu vào không hợp lệ"),
     TOKEN_INVALID(HttpStatus.BAD_REQUEST, "Token xác thực không hợp lệ"),
     TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "Token xác thực đã hết hạn"),
-    OTP_INVALID(HttpStatus.BAD_REQUEST, "Mã xác thực không đúng"),
-    INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không hợp lệ"),
-    NEW_PASSWORD_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "Mật khẩu mới trùng với mật khẩu hiện tại"),
+    OTP_INVALID(HttpStatus.BAD_REQUEST, "Mã xác thực không hợp lệ"),
+    INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không chính xác"),
+    PASSWORD_INVALID(HttpStatus.BAD_REQUEST, "Mật khẩu không hợp lệ"),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "Mật khẩu không khớp"),
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu mới trùng với mật khẩu hiện tại"),
     CAPTCHA_FAILED(HttpStatus.BAD_REQUEST, "Xác thực captcha không thành công, vui lòng thử lại"),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được sử dụng"),
     PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng"),
     ACCOUNT_ALREADY_VERIFIED(HttpStatus.CONFLICT, "Tài khoản đã được xác thực"),
     ACCOUNT_PENDING_VERIFICATION(HttpStatus.CONFLICT, "Tài khoản đã được đăng ký nhưng chưa xác thực, vui lòng xác thực tài khoản"),
+    DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "Dữ liệu đã tồn tại, vui lòng kiểm tra lại"),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy dữ liệu"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"),
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy phiên đăng nhập hoặc đã đăng xuất"),
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "Tài khoản đang bị tạm khóa"),
+    ACCOUNT_DISABLED(HttpStatus.FORBIDDEN, "Tài khoản đang bị vô hiệu hóa"),
     ACCOUNT_NOT_VERIFIED(HttpStatus.FORBIDDEN, "Tài khoản chưa được xác thực, vui lòng kiểm tra email/SMS"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Thông tin đăng nhập không chính xác"),
     REFRESH_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ"),
@@ -29,17 +39,4 @@ public enum ErrorCode {
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
-
-    ErrorCode(HttpStatus httpStatus, String defaultMessage) {
-        this.httpStatus = httpStatus;
-        this.defaultMessage = defaultMessage;
-    }
-
-    public HttpStatus getHttpStatus() {
-        return httpStatus;
-    }
-
-    public String getDefaultMessage() {
-        return defaultMessage;
-    }
 }

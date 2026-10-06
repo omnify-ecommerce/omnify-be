@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -37,13 +37,13 @@ public class SessionResponse {
         description = "Thời điểm phiên được sử dụng gần nhất (ISO-8601)",
         example = "2026-07-30T15:20:35+07:00"
     )
-    private final OffsetDateTime lastUsedAt;
+    private final Instant lastUsedAt;
 
     @Schema(
         description = "Thời điểm tạo phiên đăng nhập (ISO-8601)",
         example = "2026-07-30T08:15:12+07:00"
     )
-    private final OffsetDateTime createdAt;
+    private final Instant createdAt;
 
     @Schema(
         description = "Đánh dấu đây có phải là phiên hiện tại hay không",

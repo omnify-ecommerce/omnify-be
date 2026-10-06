@@ -1,6 +1,6 @@
 package com.omnify.auth.notification;
 
-import com.omnify.auth.domain.entity.VerificationToken;
+import com.omnify.auth.domain.enums.VerificationType;
 import com.omnify.auth.infrastructure.PhoneOtpSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,24 +29,22 @@ public class UserRegisteredEventListener {
     @Async("mailTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onUserRegistered(UserRegisteredEvent event) {
-        if (event.getVerificationChannel() == VerificationToken.Type.EMAIL_VERIFICATION) {
+        if (event.getVerificationChannel() == VerificationType.EMAIL_VERIFICATION) {
             if (event.getEmail() == null) {
                 log.warn("email_verify channel but email is null, userId={}", event.getUserId());
             }
             verificationEmailSender.sendVerificationEmail(
                 event.getEmail(),
-                event.getFullName(),
                 event.getRawVerificationToken()
             );
             return;
         }
-        if (event.getVerificationChannel() == VerificationToken.Type.PHONE_VERIFICATION) {
+        if (event.getVerificationChannel() == VerificationType.PHONE_VERIFICATION) {
             if (event.getPhone() == null) {
                 log.warn("phone_verify channel but phone is null, userId={}", event.getUserId());
             }
             phoneOtpSender.sendOtp(
                 event.getPhone(),
-                event.getFullName(),
                 event.getRawVerificationToken()
             );
             return;

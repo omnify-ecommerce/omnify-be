@@ -1,43 +1,35 @@
 package com.omnify.common.notification;
 
-import com.omnify.config.MailProperties;
-import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-//Class nay de tao va gui html email thong qua SMTP
+import com.omnify.config.properties.MailProperties;
+
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class SmtpEmailService implements EmailService {
-
+    
     private static final Logger log = LoggerFactory.getLogger(SmtpEmailService.class);
-    //Javamailsender la thanh phan giao tiep voi SMTP server va gui mimemessage
+    // JavaMailSender là thành phần giao tiếp với SMTP server và gửi MimeMessage
     private final JavaMailSender mailSender;
-    //khai bao cau hinh cua email duoc viet ben class MailProperties
+    // Khai báo cấu hình của email được viết bên class MailProperties
     private final MailProperties mailProperties;
-
-    public SmtpEmailService(JavaMailSender mailSender, MailProperties mailProperties) {
-        this.mailSender = mailSender;
-        this.mailProperties = mailProperties;
-    }
 
     @Override
     public void sendHtml(String toAddress, String subject, String htmlBody) {
         try {
-            //tao email message co utf8 ho tro tieng viet
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
-            //thiet lap nguoi gui
-            helper.setFrom(mailProperties.getFromAddress(), mailProperties.getFromName());
-            //nguoi nhan
+            helper.setFrom(mailProperties.fromAddress(), mailProperties.fromName());
             helper.setTo(toAddress);
-            //chu de mail da config ben class verificationemailsender
             helper.setSubject(subject);
-            //Noi dung email xu li duoi dang html
             helper.setText(htmlBody, true);
-            //gui
             mailSender.send(message);
             log.info("Email sent successfully to={}", maskEmail(toAddress));
         } catch (Exception ex) {
@@ -46,7 +38,6 @@ public class SmtpEmailService implements EmailService {
         }
     }
 
-    //log de debug nhung che mail lai de bao mat
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) return "***";
         int at = email.indexOf('@');

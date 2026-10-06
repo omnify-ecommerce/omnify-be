@@ -1,6 +1,7 @@
 package com.omnify.auth.service.impl;
 
 import com.omnify.auth.domain.entity.RefreshToken;
+import com.omnify.auth.domain.enums.TokenStatus;
 import com.omnify.auth.domain.repository.RefreshTokenRepository;
 import com.omnify.auth.dto.response.SessionResponse;
 import com.omnify.auth.service.SessionService;
@@ -25,7 +26,7 @@ public class SessionServiceImpl implements SessionService {
     @Transactional(readOnly = true)
     public List<SessionResponse> listActiveSessions(UUID userId, UUID currentSessionId) {
         List<RefreshToken> sessions =
-            refreshTokenRepository.findActiveSessionsByUserId(userId, RefreshToken.Status.VALID);
+            refreshTokenRepository.findActiveSessionsByUserId(userId, TokenStatus.VALID);
         return sessions.stream()
             .map(rt -> SessionResponse.builder()
                 .sessionId(rt.getId())
@@ -42,7 +43,7 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public void revokeSession(UUID sessionId, UUID userId) {
         int affected = refreshTokenRepository.revokeSession(
-            sessionId, userId, RefreshToken.Status.VALID, RefreshToken.Status.REVOKED);
+            sessionId, userId, TokenStatus.VALID, TokenStatus.REVOKED);
         if (affected == 0) {
             throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);
         }
@@ -57,6 +58,6 @@ public class SessionServiceImpl implements SessionService {
         }
 
         refreshTokenRepository.revokeAllOtherSessions(
-            userId, currentSessionId, RefreshToken.Status.VALID, RefreshToken.Status.REVOKED);
+            userId, currentSessionId, TokenStatus.VALID, TokenStatus.REVOKED);
     }
 }

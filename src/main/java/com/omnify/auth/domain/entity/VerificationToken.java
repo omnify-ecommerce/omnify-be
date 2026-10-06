@@ -1,44 +1,63 @@
 package com.omnify.auth.domain.entity;
 
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.Instant;
+import java.util.UUID;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import com.omnify.auth.domain.enums.VerificationType;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "verification_tokens")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class VerificationToken {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
+
     @Column(name = "user_id", nullable = false)
     private UUID userId;
-    @Column(name = "token_hash", nullable = false)
+
+    @Column(name = "token_hash", nullable = false, unique = true, length = 255)
     private String tokenHash;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "type", columnDefinition = "verification_type")
-    private Type type;
-    @Column(name = "expires_at", nullable = false)
-    private OffsetDateTime expiresAt;
-    @Column(name = "used_at")
-    private OffsetDateTime usedAt;
-    // Đếm số lần nhập sai để chống brute-force OTP 6 số
-    @Column(name = "attempt_count", nullable = false)
-    private int attemptCount = 0;
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(nullable = false)
+    private VerificationType type;
 
-    public static VerificationToken issue(UUID userId, String tokenHash, Type type, OffsetDateTime expiresAt) {
+    @Builder.Default
+    @Column(name = "attempt_count", nullable = false)
+    private Integer attemptCount = 0;
+
+    @Column(name = "expires_at", nullable = false)
+    private Instant expiresAt;
+
+    @Column(name = "used_at")
+    private Instant usedAt;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    public static VerificationToken issue(
+            UUID userId, 
+            String tokenHash, 
+            VerificationType type, 
+            Instant expiresAt
+    ) {
         VerificationToken token = new VerificationToken();
         token.userId = userId;
         token.tokenHash = tokenHash;
@@ -48,7 +67,7 @@ public class VerificationToken {
     }
 
     public boolean isExpired() {
-        return OffsetDateTime.now().isAfter(expiresAt);
+        return Instant.now().isAfter(expiresAt);
     }
 
     public boolean isUsed() {
@@ -56,22 +75,11 @@ public class VerificationToken {
     }
 
     public void markUsed() {
-        this.usedAt = OffsetDateTime.now();
+        this.usedAt = Instant.now();
     }
 
-    /**
-     * Tăng số lần nhập sai. Trả về true nếu đã vượt ngưỡng cho phép.
-     */
     public boolean registerFailedAttempt(int maxAttempts) {
         this.attemptCount++;
         return this.attemptCount >= maxAttempts;
-    }
-
-    public enum Type {
-        EMAIL_VERIFICATION,
-        EMAIL_CHANGE,
-        PHONE_VERIFICATION,
-        PHONE_CHANGE,
-        PASSWORD_RESET
     }
 }
